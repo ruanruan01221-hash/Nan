@@ -2,7 +2,6 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <!-- iOS / 手机适配：关键一句 -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ChatGPT 聊天查看器</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -48,7 +47,7 @@
       background: rgba(255, 255, 255, 0.88);
     }
 
-    /* 左侧侧边栏 */
+    /* 左侧侧边栏（桌面端用） */
     .sidebar {
       width: var(--sidebar-width);
       border-right: 1px solid var(--border-soft);
@@ -163,12 +162,15 @@
       justify-content: space-between;
       background: linear-gradient(90deg, #ffe7f1, #ffffff);
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     .main-header-left {
       display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 180px;
+      flex: 1;
     }
 
     .chat-title {
@@ -197,6 +199,12 @@
       display: flex;
       align-items: center;
       gap: 4px;
+      white-space: nowrap;
+    }
+
+    .settings input[type="file"] {
+      font-size: 11px;
+      max-width: 140px;
     }
 
     .settings input[type="color"] {
@@ -207,11 +215,6 @@
       padding: 0;
       background: transparent;
       cursor: pointer;
-    }
-
-    .settings input[type="file"] {
-      font-size: 11px;
-      max-width: 160px;
     }
 
     .settings small {
@@ -342,7 +345,6 @@
 
     .bubble .markdown-body a:hover { text-decoration: underline; }
 
-    /* 时间+模型 放在气泡下面 */
     .meta-line {
       margin-top: 2px;
       font-size: 11px;
@@ -376,7 +378,7 @@
         height: 100vh;
       }
       .sidebar {
-        display: none; /* 小屏默认只看聊天区，气泡更大 */
+        display: none; /* 手机上隐藏左侧列表，只保留顶部导入按钮 */
       }
       .bubble {
         font-size: 15px;
@@ -386,7 +388,7 @@
 </head>
 <body>
   <div class="app">
-    <!-- 左侧导航 -->
+    <!-- 左侧导航（桌面端） -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-header-title">
@@ -419,6 +421,11 @@
           </div>
         </div>
         <div class="settings">
+          <!-- 新增：顶部导入按钮（手机也能点到） -->
+          <label>
+            导入聊天
+            <input id="fileInputHeader" type="file" multiple accept=".json,.txt" />
+          </label>
           <label>
             用户头像
             <input type="file" id="userAvatarFile" accept="image/*" />
@@ -435,14 +442,14 @@
             背景图
             <input type="file" id="bgImageInput" accept="image/*" />
           </label>
-          <small>头像/背景均在本地读取，不会上传。</small>
+          <small>头像/背景/聊天文件均在本地读取，不会上传。</small>
         </div>
       </header>
 
       <div id="chatBody" class="chat-body">
         <div class="chat-empty">
           <div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ა</div>
-          <div>把 ChatGPT 导出的聊天 JSON / 文本拖进来，<br>左边选窗口，右边就会出现完整聊天记录哦。</div>
+          <div>把 ChatGPT 导出的聊天 JSON / 文本拖进来或点上面的“导入聊天”，<br>左边选窗口，右边就会出现完整聊天记录哦。</div>
         </div>
       </div>
 
@@ -458,15 +465,13 @@
     const state = {
       conversations: [],
       activeId: null,
-      avatars: {
-        user: "",
-        assistant: ""
-      }
+      avatars: { user: "", assistant: "" }
     };
 
     marked.setOptions({ breaks: true, gfm: true });
 
-    const fileInput = document.getElementById("fileInput");
+    const fileInputSidebar = document.getElementById("fileInput");
+    const fileInputHeader = document.getElementById("fileInputHeader");
     const conversationListEl = document.getElementById("conversationList");
     const chatBodyEl = document.getElementById("chatBody");
     const chatTitleEl = document.getElementById("chatTitle");
@@ -477,7 +482,8 @@
     const userAvatarFileInput = document.getElementById("userAvatarFile");
     const assistantAvatarFileInput = document.getElementById("assistantAvatarFile");
 
-    fileInput.addEventListener("change", handleFiles, false);
+    if (fileInputSidebar) fileInputSidebar.addEventListener("change", handleFiles, false);
+    if (fileInputHeader) fileInputHeader.addEventListener("change", handleFiles, false);
 
     bgColorInput.addEventListener("input", (e) => {
       document.documentElement.style.setProperty("--chat-bg", e.target.value);
@@ -548,20 +554,15 @@
       });
     }
 
-    /* ----------- 解析 JSON：只取“最后主线” + 模型 ----------- */
+    /* ----------- 解析 JSON：主线 + 模型 ----------- */
     function parseFromJsonExport(json, filename) {
       const convs = [];
       let arr = [];
 
-      if (Array.isArray(json)) {
-        arr = json;
-      } else if (Array.isArray(json.conversations)) {
-        arr = json.conversations;
-      } else if (json.mapping && json.title) {
-        arr = [json];
-      } else {
-        return [];
-      }
+      if (Array.isArray(json)) arr = json;
+      else if (Array.isArray(json.conversations)) arr = json.conversations;
+      else if (json.mapping && json.title) arr = [json];
+      else return [];
 
       arr.forEach((conv, index) => {
         const title = conv.title || `${stripExt(filename)} #${index + 1}`;
@@ -595,12 +596,7 @@
               const timestamp = rawTime ? formatTimestampFromSeconds(rawTime) : "";
               const model = detectModel(msg);
 
-              messages.push({
-                role,
-                timestamp,
-                content: trimmed,
-                model
-              });
+              messages.push({ role, timestamp, content: trimmed, model });
             });
           } else {
             const temp = [];
@@ -808,7 +804,7 @@
       if (!conv) {
         chatTitleEl.textContent = "还没有打开会话";
         chatSubtitleEl.textContent =
-          "左侧导入并选择一个会话，就能开始回顾聊天啦。";
+          "左侧导入并选择一个会话，或者上面点“导入聊天”，就能开始回顾聊天啦。";
         chatBodyEl.innerHTML = `
           <div class="chat-empty">
             <div class="chat-empty-emoji">₍ᐢ. ̫ .ᐢ₎</div>
