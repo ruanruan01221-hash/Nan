@@ -8,8 +8,6 @@
   <style>
     :root {
       --sidebar-width: 260px;
-      --accent: #ff97c2;
-      --accent-soft: #ffe4f1;
       --assistant-bubble: #ffffff;
       --user-bubble: #ffbcd8;
       --chat-bg: #ffeef6;
@@ -245,7 +243,7 @@
 
     .message-row {
       display: flex;
-      align-items: flex-start; /* 头像与气泡顶部对齐 */
+      align-items: flex-start;
       margin-bottom: 10px;
       gap: 8px;
     }
@@ -302,33 +300,6 @@
       border-bottom-right-radius: 6px;
     }
 
-    /* 小尾巴：靠上，对着头像 */
-    .message-row.assistant .bubble::after {
-      content: "";
-      position: absolute;
-      left: -6px;
-      top: 6px;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 8px 8px 8px 0;
-      border-color: transparent var(--assistant-bubble) transparent transparent;
-      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
-    }
-
-    .message-row.user .bubble::after {
-      content: "";
-      position: absolute;
-      right: -6px;
-      top: 6px;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 8px 0 8px 8px;
-      border-color: transparent transparent transparent var(--user-bubble);
-      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
-    }
-
     .bubble .markdown-body p { margin: 0 0 4px; }
     .bubble .markdown-body p:last-child { margin-bottom: 0; }
 
@@ -375,10 +346,7 @@
       font-size: 11px;
       color: #b59ab0;
     }
-
-    .message-row.user .meta-line {
-      text-align: right;
-    }
+    .message-row.user .meta-line { text-align: right; }
 
     .main-footer {
       padding: 6px 14px 9px;
@@ -471,7 +439,8 @@
 
       <footer class="main-footer">
         <span>提示：</span>仅展示 <code>user</code> / <code>assistant</code> 消息，忽略 system / tool，
-        空内容自动跳过。若导出文件里带模型字段，会显示在时间后面。
+        空内容自动跳过。若导出文件里带模型字段，会显示在时间后面。<br>
+        对于官方导出的 JSON，会沿着当前节点只取“最后那条主线”，不会把分支全部展开。
       </footer>
     </section>
   </div>
@@ -570,7 +539,7 @@
       });
     }
 
-    /* ----------- 解析 JSON：全量消息 + 模型 ----------- */
+    /* ----------- 解析 JSON：只取“最后主线” + 模型 ----------- */
     function parseFromJsonExport(json, filename) {
       const convs = [];
       let arr = [];
@@ -590,43 +559,84 @@
         const messages = [];
 
         if (conv.mapping) {
-          Object.values(conv.mapping).forEach((node) => {
-            if (!node || !node.message) return;
-            const msg = node.message;
-            const author = msg.author || {};
-            const role = author.role;
-            if (role !== "user" && role !== "assistant") return;
+          const mapping = conv.mapping;
+          // 如果有 current_node：从 current_node 一路向上走父节点，只取这一条主线
+          if (conv.current_node && mapping[conv.current_node]) {
+            const pathNodes = buildMainPath(mapping, conv.current_node); // 已按时间顺序
+            pathNodes.forEach((node) => {
+              const msg = node.message;
+              if (!msg) return;
+              const author = msg.author || {};
+              const role = author.role;
+              if (role !== "user" && role !== "assistant") return;
 
-            let content = "";
-            if (msg.content) {
-              if (Array.isArray(msg.content.parts)) {
-                content = msg.content.parts.join("\n");
-              } else if (typeof msg.content === "string") {
-                content = msg.content;
-              } else if (msg.content.text) {
-                content = msg.content.text;
+              let content = "";
+              if (msg.content) {
+                if (Array.isArray(msg.content.parts)) {
+                  content = msg.content.parts.join("\n");
+                } else if (typeof msg.content === "string") {
+                  content = msg.content;
+                } else if (msg.content.text) {
+                  content = msg.content.text;
+                }
               }
-            }
-            const trimmed = (content || "").trim();
-            if (!trimmed) return;
+              const trimmed = (content || "").trim();
+              if (!trimmed) return;
 
-            const rawTime = msg.create_time || 0;
-            const timestamp = rawTime ? formatTimestampFromSeconds(rawTime) : "";
+              const rawTime = msg.create_time || 0;
+              const timestamp = rawTime ? formatTimestampFromSeconds(rawTime) : "";
+              const model = detectModel(msg);
 
-            const m = detectModel(msg);
-
-            messages.push({
-              role,
-              timestamp,
-              content: trimmed,
-              model: m,
-              _rawTime: rawTime
+              messages.push({
+                role,
+                timestamp,
+                content: trimmed,
+                model
+              });
             });
-          });
+          } else {
+            // 没有 current_node，就退回到“全部节点按时间排”的老逻辑
+            const temp = [];
+            Object.values(mapping).forEach((node) => {
+              if (!node || !node.message) return;
+              const msg = node.message;
+              const role = msg.author && msg.author.role;
+              if (role !== "user" && role !== "assistant") return;
 
-          messages.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
-          messages.forEach((m) => delete m._rawTime);
+              let content = "";
+              if (msg.content) {
+                if (Array.isArray(msg.content.parts)) {
+                  content = msg.content.parts.join("\n");
+                } else if (typeof msg.content === "string") {
+                  content = msg.content;
+                } else if (msg.content.text) {
+                  content = msg.content.text;
+                }
+              }
+              const trimmed = (content || "").trim();
+              if (!trimmed) return;
+
+              const rawTime = msg.create_time || 0;
+              const timestamp = rawTime ? formatTimestampFromSeconds(rawTime) : "";
+              const model = detectModel(msg);
+
+              temp.push({
+                role,
+                timestamp,
+                content: trimmed,
+                model,
+                _rawTime: rawTime
+              });
+            });
+
+            temp.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
+            temp.forEach((m) => {
+              delete m._rawTime;
+              messages.push(m);
+            });
+          }
         } else if (Array.isArray(conv.messages)) {
+          const temp = [];
           conv.messages.forEach((m, idx) => {
             if (!m) return;
             const role = m.role || (m.author && m.author.role);
@@ -649,10 +659,9 @@
             const timestamp = m.create_time
               ? formatTimestampFromSeconds(m.create_time)
               : "";
-
             const model = detectModel(m);
 
-            messages.push({
+            temp.push({
               role,
               timestamp,
               content: trimmed,
@@ -661,8 +670,11 @@
             });
           });
 
-          messages.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
-          messages.forEach((m) => delete m._rawTime);
+          temp.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
+          temp.forEach((m) => {
+            delete m._rawTime;
+            messages.push(m);
+          });
         }
 
         if (messages.length) {
@@ -681,6 +693,21 @@
       return convs;
     }
 
+    // 从 current_node 一路向上追 parent，最后反转，得到一条主线
+    function buildMainPath(mapping, currentId) {
+      const path = [];
+      const seen = new Set();
+      let id = currentId;
+      while (id && !seen.has(id)) {
+        seen.add(id);
+        const node = mapping[id];
+        if (!node) break;
+        path.push(node);
+        id = node.parent;
+      }
+      return path.reverse();
+    }
+
     // 可能的模型字段来源：metadata.model / metadata.model_slug / model / model_slug
     function detectModel(msg) {
       const md = msg.metadata || {};
@@ -697,7 +724,7 @@
     function parseFromTextTranscript(text, filename) {
       const messages = [];
       const re =
-        /【(user|assistant)】\s*\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s*([\s\S]*?)(?=\n【(?:user|assistant)】\s*\[\d{4}-\d{2}-\d2 \d{2}:\d{2}:\d{2}\]|$)/g;
+        /【(user|assistant)】\s*\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s*([\s\S]*?)(?=\n【(?:user|assistant)】\s*\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]|$)/g;
 
       let match;
       while ((match = re.exec(text)) !== null) {
