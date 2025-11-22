@@ -81,6 +81,24 @@
       line-height: 1.4;
     }
 
+    .search-box {
+      margin-top: 10px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #f1c5dd;
+      font-size: 12px;
+      outline: none;
+      background: rgba(255,255,255,0.9);
+    }
+
+    .search-input::placeholder {
+      color: #c9a2bb;
+    }
+
     .conversation-list {
       flex: 1;
       overflow-y: auto;
@@ -207,53 +225,18 @@
 
     .settings {
       display: flex;
-      flex-direction: column;
-      gap: 6px;
-      align-items: stretch;
-      max-width: 520px;
-      font-size: 11px;
-      color: #a07f94;
-    }
-    .settings.collapsed { display: none; }
-
-    .import-title {
-      font-size: 11px;
-      color: #a67792;
-      margin-bottom: 2px;
-    }
-
-    .import-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .import-box {
-      border: 1px dashed #f2c3dd;
-      border-radius: 12px;
-      padding: 6px 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      cursor: pointer;
-      background: rgba(255,255,255,0.7);
-    }
-
-    .import-box span.icon {
-      font-size: 16px;
-    }
-
-    .settings-row {
-      display: flex;
       flex-wrap: wrap;
       gap: 6px 10px;
       align-items: center;
       justify-content: flex-end;
-      margin-top: 4px;
+      max-width: 520px;
+      font-size: 11px;
+      color: #a07f94;
     }
 
-    .settings-row label {
+    .settings.collapsed { display: none; }
+
+    .settings label {
       display: flex;
       align-items: center;
       gap: 4px;
@@ -400,19 +383,20 @@
 
     .bubble .markdown-body a:hover { text-decoration: underline; }
 
-    .chat-image {
-      max-width: 220px;
-      border-radius: 12px;
-      margin-top: 6px;
-      display: block;
-    }
-
     .meta-line {
       margin-top: 2px;
       font-size: 11px;
       color: #b59ab0;
     }
     .message-row.user .meta-line { text-align: right; }
+
+    /* 搜索命中高亮 */
+    mark {
+      background: #ffe07f;
+      color: inherit;
+      padding: 0 1px;
+      border-radius: 2px;
+    }
 
     .main-footer {
       padding: 6px 14px 9px;
@@ -453,10 +437,6 @@
 
       .bubble { font-size: 15px; }
     }
-
-    .hidden-input {
-      display: none;
-    }
   </style>
 </head>
 <body>
@@ -469,7 +449,10 @@
           <span>ChatGPT 聊天列表</span>
         </div>
         <div class="sidebar-sub">
-          在右上角 <b>⚙ → 选择 ChatGPT 目录或 JSON 文件</b>，这边只用来切换会话窗口。
+          请在右上角 <b>⚙ → 导入聊天</b> 选择导出的 JSON / 文本文件，这里只用来选择会话窗口。
+        </div>
+        <div class="search-box">
+          <input id="searchInput" class="search-input" type="text" placeholder="搜索聊天内容…" />
         </div>
       </div>
       <div id="conversationList" class="conversation-list"></div>
@@ -492,37 +475,26 @@
           <button class="icon-btn" id="toggleSettingsBtn">⚙</button>
           <span class="settings-toggle-label">设置</span>
           <div class="settings collapsed" id="settingsPanel">
-            <div class="import-title">选择 ChatGPT 目录或 JSON 文件</div>
-            <div class="import-grid">
-              <label class="import-box" for="dirInput">
-                <span class="icon">📁</span><span>导入目录</span>
-              </label>
-              <label class="import-box" for="fileInputHeader">
-                <span class="icon">🧾</span><span>导入 conversations.json</span>
-              </label>
-            </div>
-
-            <input id="dirInput" type="file" class="hidden-input" webkitdirectory multiple />
-            <input id="fileInputHeader" type="file" class="hidden-input" accept=".json,.txt" />
-
-            <div class="settings-row">
-              <label>
-                用户头像
-                <input type="file" id="userAvatarFile" accept="image/*" />
-              </label>
-              <label>
-                助手头像
-                <input type="file" id="assistantAvatarFile" accept="image/*" />
-              </label>
-              <label>
-                聊天背景色
-                <input type="color" id="bgColor" value="#ffeef6" />
-              </label>
-              <label>
-                背景图
-                <input type="file" id="bgImageInput" accept="image/*" />
-              </label>
-            </div>
+            <label>
+              导入聊天
+              <input id="fileInputHeader" type="file" multiple accept=".json,.txt" />
+            </label>
+            <label>
+              用户头像
+              <input type="file" id="userAvatarFile" accept="image/*" />
+            </label>
+            <label>
+              助手头像
+              <input type="file" id="assistantAvatarFile" accept="image/*" />
+            </label>
+            <label>
+              聊天背景色
+              <input type="color" id="bgColor" value="#ffeef6" />
+            </label>
+            <label>
+              背景图
+              <input type="file" id="bgImageInput" accept="image/*" />
+            </label>
             <small>文件/头像/背景均在本地读取，不会上传。</small>
           </div>
         </div>
@@ -531,27 +503,25 @@
       <div id="chatBody" class="chat-body">
         <div class="chat-empty">
           <div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ა</div>
-          <div>点右上角「⚙ → 导入目录 / conversations.json」，<br>左边选窗口，右边就会出现完整聊天记录和图片哦。</div>
+          <div>点右上角「⚙ → 导入聊天」，<br>左边选窗口，右边就会出现完整聊天记录哦。</div>
         </div>
       </div>
 
       <footer class="main-footer">
         <span>提示：</span>仅展示 <code>user</code> / <code>assistant</code> 消息，忽略 system / tool，
         空内容自动跳过。若导出文件里带模型字段，会显示在时间后面。<br>
-        对于官方导出的 JSON，会沿着当前节点只取“最后那条主线”，不会把分支全部展开。
+        对于官方导出的 JSON，会沿着当前节点只取“最后那条主线”，不会把分支全部展开。会话列表按开始时间从新到旧排序。
       </footer>
     </section>
   </div>
 
   <script>
     const state = {
-      conversations: [],
+      conversations: [],   // {id,title,subtitle,firstTimeValue,messages:[{...}]}
       activeId: null,
-      avatars: { user: "", assistant: "" }
+      avatars: { user: "", assistant: "" },
+      searchQuery: ""
     };
-
-    // pointer => objectURL
-    const imageBlobMap = new Map();
 
     marked.setOptions({ breaks: true, gfm: true });
 
@@ -560,7 +530,7 @@
     const toggleSettingsBtn = document.getElementById("toggleSettingsBtn");
     const settingsPanel = document.getElementById("settingsPanel");
 
-    const dirInput = document.getElementById("dirInput");
+    const searchInput = document.getElementById("searchInput");
     const fileInputHeader = document.getElementById("fileInputHeader");
     const conversationListEl = document.getElementById("conversationList");
     const chatBodyEl = document.getElementById("chatBody");
@@ -572,7 +542,7 @@
     const userAvatarFileInput = document.getElementById("userAvatarFile");
     const assistantAvatarFileInput = document.getElementById("assistantAvatarFile");
 
-    /* ====== UI 交互 ====== */
+    /* 侧栏 & 设置开关 */
     function toggleSidebar() {
       if (window.innerWidth > 900) return;
       sidebar.classList.toggle("open");
@@ -586,9 +556,14 @@
       settingsPanel.classList.remove("collapsed");
     }
 
-    if (dirInput) dirInput.addEventListener("change", handleDirectorySelect, false);
-    if (fileInputHeader) fileInputHeader.addEventListener("change", handleJsonFiles, false);
+    /* 搜索输入 */
+    searchInput.addEventListener("input", (e) => {
+      state.searchQuery = e.target.value.trim();
+      renderConversationList();
+      renderActiveConversation(); // 让右侧高亮跟着变
+    });
 
+    /* 颜色 & 背景 */
     bgColorInput.addEventListener("input", (e) => {
       document.documentElement.style.setProperty("--chat-bg", e.target.value);
       document.body.style.backgroundColor = e.target.value;
@@ -604,6 +579,7 @@
       reader.readAsDataURL(file);
     });
 
+    /* 头像上传 */
     userAvatarFileInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -626,67 +602,10 @@
       reader.readAsDataURL(file);
     });
 
-    /* ====== 导入整个目录：包含 conversations.json + 图片 ====== */
-    async function handleDirectorySelect(e) {
-      const files = Array.from(e.target.files || []);
-      if (!files.length) return;
+    /* 导入文件 */
+    if (fileInputHeader) fileInputHeader.addEventListener("change", handleFiles, false);
 
-      // 重置
-      imageBlobMap.clear();
-      state.conversations = [];
-      state.activeId = null;
-
-      // 找 conversations.json
-      const convFile = files.find((f) => f.name === "conversations.json");
-      if (!convFile) {
-        alert("选的目录里没有 conversations.json 哦");
-        return;
-      }
-
-      // 先把图片都挂进 map（文件名&去掉后缀都做 key）
-      files.forEach((file) => {
-        if (file.type.startsWith("image/")) {
-          const url = URL.createObjectURL(file);
-          const name = file.name;
-          const base = name.replace(/\.[^.]+$/, "");
-          imageBlobMap.set(name, url);
-          imageBlobMap.set(base, url);
-
-          // webkitRelativePath 里也放一下（有目录前缀）
-          if (file.webkitRelativePath) {
-            const rel = file.webkitRelativePath.replace(/^.*\//, "");
-            const relBase = rel.replace(/\.[^.]+$/, "");
-            imageBlobMap.set(rel, url);
-            imageBlobMap.set(relBase, url);
-          }
-        }
-      });
-
-      const text = await convFile.text();
-      let json;
-      try {
-        json = JSON.parse(text);
-      } catch (err) {
-        alert("conversations.json 解析失败");
-        return;
-      }
-
-      const convs = parseFromJsonExport(json, convFile.name);
-      convs.forEach((c) => {
-        if (!c.messages || !c.messages.length) return;
-        state.conversations.push(c);
-      });
-
-      if (state.conversations.length) {
-        state.activeId = state.conversations[0].id;
-      }
-
-      renderConversationList();
-      renderActiveConversation();
-    }
-
-    /* ====== 只导入 JSON 文件（不带目录） ====== */
-    function handleJsonFiles(e) {
+    function handleFiles(e) {
       const files = Array.from(e.target.files || []);
       if (!files.length) return;
 
@@ -707,6 +626,8 @@
             state.conversations.push(c);
           });
 
+          sortConversationsByTime();
+
           if (!state.activeId && state.conversations.length) {
             state.activeId = state.conversations[0].id;
           }
@@ -718,68 +639,13 @@
       });
     }
 
-    /* ====== 内容解析（文字 + 图片指针） ====== */
-
-    function extractContentAndImages(msg) {
-      let textParts = [];
-      let images = [];
-      const c = msg.content;
-      if (!c) return { text: "", images: [] };
-
-      if (Array.isArray(c.parts)) {
-        c.parts.forEach((p) => {
-          if (typeof p === "string") {
-            textParts.push(p);
-          } else if (p && typeof p === "object") {
-            if (p.content_type === "text" && p.text && typeof p.text.value === "string") {
-              textParts.push(p.text.value);
-            } else if (p.asset_pointer) {
-              images.push(p.asset_pointer);
-            } else if (p.image_url) {
-              if (typeof p.image_url === "string") {
-                images.push(p.image_url);
-              } else if (p.image_url.url) {
-                images.push(p.image_url.url);
-              }
-            }
-          }
-        });
-      } else if (typeof c === "string") {
-        textParts.push(c);
-      } else if (c.text && typeof c.text === "string") {
-        textParts.push(c.text);
-      } else if (c.text && typeof c.text.value === "string") {
-        textParts.push(c.text.value);
-      }
-
-      return { text: textParts.join("\n"), images };
+    function sortConversationsByTime() {
+      state.conversations.sort(
+        (a, b) => (b.firstTimeValue || 0) - (a.firstTimeValue || 0)
+      );
     }
 
-    function resolveImageUrl(pointer) {
-      if (!pointer) return "";
-
-      // 先直接查 map（指针完整写法）
-      if (imageBlobMap.has(pointer)) return imageBlobMap.get(pointer);
-
-      // 去掉扩展名查一次
-      const base = pointer.replace(/\.[^.]+$/, "");
-      if (imageBlobMap.has(base)) return imageBlobMap.get(base);
-
-      // 有些导出是 file-XXXX，文件名是 file_XXXX...，做个前缀模糊匹配
-      for (const [key, url] of imageBlobMap.entries()) {
-        if (key.startsWith(pointer) || pointer.startsWith(key)) {
-          return url;
-        }
-      }
-
-      // 已经是 http(s) 链接
-      if (/^https?:\/\//i.test(pointer)) return pointer;
-
-      return "";
-    }
-
-    /* ====== JSON 主线解析 ====== */
-
+    /* ------- 解析 JSON：只取主线 + 模型 + 开始时间 ------- */
     function parseFromJsonExport(json, filename) {
       const convs = [];
       let arr = [];
@@ -792,27 +658,41 @@
       arr.forEach((conv, index) => {
         const title = conv.title || `${stripExt(filename)} #${index + 1}`;
         const messages = [];
+        let firstRawTime = null;
 
         if (conv.mapping) {
           const mapping = conv.mapping;
           if (conv.current_node && mapping[conv.current_node]) {
             const pathNodes = buildMainPath(mapping, conv.current_node);
-            pathNodes.forEach((node) => {
+            pathNodes.forEach((node, idx) => {
               const msg = node.message;
               if (!msg) return;
               const author = msg.author || {};
               const role = author.role;
               if (role !== "user" && role !== "assistant") return;
 
-              const { text, images } = extractContentAndImages(msg);
-              const trimmed = (text || "").trim();
-              if (!trimmed && (!images || !images.length)) return;
+              let content = "";
+              if (msg.content) {
+                if (Array.isArray(msg.content.parts)) {
+                  content = msg.content.parts.join("\n");
+                } else if (typeof msg.content === "string") {
+                  content = msg.content;
+                } else if (msg.content.text) {
+                  content = msg.content.text;
+                }
+              }
+              const trimmed = (content || "").trim();
+              if (!trimmed) return;
 
-              const rawTime = msg.create_time || 0;
-              const timestamp = rawTime ? formatTimestampFromSeconds(rawTime) : "";
+              const rawTime = msg.create_time ?? idx;
+              const timestamp = msg.create_time
+                ? formatTimestampFromSeconds(msg.create_time)
+                : "";
+
+              if (firstRawTime == null) firstRawTime = rawTime;
               const model = detectModel(msg);
 
-              messages.push({ role, timestamp, content: trimmed, images, model });
+              messages.push({ role, timestamp, content: trimmed, model });
             });
           } else {
             const temp = [];
@@ -822,19 +702,31 @@
               const role = msg.author && msg.author.role;
               if (role !== "user" && role !== "assistant") return;
 
-              const { text, images } = extractContentAndImages(msg);
-              const trimmed = (text || "").trim();
-              if (!trimmed && (!images || !images.length)) return;
+              let content = "";
+              if (msg.content) {
+                if (Array.isArray(msg.content.parts)) {
+                  content = msg.content.parts.join("\n");
+                } else if (typeof msg.content === "string") {
+                  content = msg.content;
+                } else if (msg.content.text) {
+                  content = msg.content.text;
+                }
+              }
+              const trimmed = (content || "").trim();
+              if (!trimmed) return;
 
-              const rawTime = msg.create_time || 0;
-              const timestamp = rawTime ? formatTimestampFromSeconds(rawTime) : "";
+              const rawTime = msg.create_time ?? 0;
+              const timestamp = msg.create_time
+                ? formatTimestampFromSeconds(msg.create_time)
+                : "";
               const model = detectModel(msg);
 
-              temp.push({ role, timestamp, content: trimmed, images, model, _rawTime: rawTime });
+              temp.push({ role, timestamp, content: trimmed, model, _rawTime: rawTime });
             });
 
             temp.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
-            temp.forEach((m) => {
+            temp.forEach((m, idx) => {
+              if (firstRawTime == null) firstRawTime = m._rawTime ?? idx;
               delete m._rawTime;
               messages.push(m);
             });
@@ -846,35 +738,53 @@
             const role = m.role || (m.author && m.author.role);
             if (role !== "user" && role !== "assistant") return;
 
-            const { text, images } = extractContentAndImages(m);
-            const trimmed = (text || "").trim();
-            if (!trimmed && (!images || !images.length)) return;
+            let content = "";
+            if (m.content) {
+              if (Array.isArray(m.content.parts)) {
+                content = m.content.parts.join("\n");
+              } else if (typeof m.content === "string") {
+                content = m.content;
+              } else if (m.content.text) {
+                content = m.content.text;
+              }
+            }
+            const trimmed = (content || "").trim();
+            if (!trimmed) return;
 
-            const rawTime = m.create_time || idx;
+            const rawTime = m.create_time ?? idx;
             const timestamp = m.create_time
               ? formatTimestampFromSeconds(m.create_time)
               : "";
             const model = detectModel(m);
 
-            temp.push({ role, timestamp, content: trimmed, images, model, _rawTime: rawTime });
+            temp.push({ role, timestamp, content: trimmed, model, _rawTime: rawTime });
           });
 
           temp.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
-          temp.forEach((m) => {
+          temp.forEach((m, idx) => {
+            if (firstRawTime == null) firstRawTime = m._rawTime ?? idx;
             delete m._rawTime;
             messages.push(m);
           });
         }
 
         if (messages.length) {
-          const firstTime = messages[0].timestamp || "";
+          const firstTimeStr = messages[0].timestamp || "";
+          const firstVal =
+            firstRawTime != null
+              ? firstRawTime
+              : firstTimeStr
+              ? parseTimeStringToSeconds(firstTimeStr)
+              : 0;
+
           convs.push({
             id: conv.id || `${filename}-${index}`,
             title,
-            subtitle: firstTime
-              ? `从 ${firstTime} 开始 · ${messages.length} 条消息`
+            subtitle: firstTimeStr
+              ? `从 ${firstTimeStr} 开始 · ${messages.length} 条消息`
               : `${messages.length} 条消息`,
-            messages
+            messages,
+            firstTimeValue: firstVal
           });
         }
       });
@@ -914,13 +824,17 @@
         /【(user|assistant)】\s*\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s*([\s\S]*?)(?=\n【(?:user|assistant)】\s*\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]|$)/g;
 
       let match;
+      let firstVal = null;
+
       while ((match = re.exec(text)) !== null) {
         const role = match[1];
         const ts = match[2];
         const contentRaw = match[3] || "";
         const content = contentRaw.trim();
         if (!content) continue;
-        messages.push({ role, timestamp: ts, content, images: [], model: "" });
+        const val = parseTimeStringToSeconds(ts);
+        if (firstVal == null) firstVal = val;
+        messages.push({ role, timestamp: ts, content, model: "" });
       }
 
       return {
@@ -929,7 +843,8 @@
         subtitle: messages.length
           ? `从 ${messages[0].timestamp} 开始 · ${messages.length} 条消息`
           : "未解析到有效消息",
-        messages
+        messages,
+        firstTimeValue: firstVal ?? 0
       };
     }
 
@@ -949,11 +864,40 @@
       return `${y}-${m}-${day} ${h}:${mi}:${s}`;
     }
 
+    function parseTimeStringToSeconds(ts) {
+      // "YYYY-MM-DD HH:MM:SS" -> UTC 秒
+      const m = ts.match(
+        /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/
+      );
+      if (!m) return 0;
+      const [_, y, mo, d, h, mi, s] = m;
+      return Date.UTC(
+        Number(y),
+        Number(mo) - 1,
+        Number(d),
+        Number(h),
+        Number(mi),
+        Number(s)
+      ) / 1000;
+    }
+
+    /* ------- 渲染会话列表（带搜索过滤） ------- */
     function renderConversationList() {
       conversationListEl.innerHTML = "";
       if (!state.conversations.length) return;
 
-      state.conversations.forEach((conv) => {
+      const q = state.searchQuery.toLowerCase();
+      let list = state.conversations.slice();
+
+      if (q) {
+        list = list.filter((conv) =>
+          conv.messages.some((m) =>
+            (m.content || "").toLowerCase().includes(q)
+          )
+        );
+      }
+
+      list.forEach((conv) => {
         const item = document.createElement("div");
         item.className = "conversation-item";
         if (conv.id === state.activeId) item.classList.add("active");
@@ -986,6 +930,10 @@
       return parts.join(" · ");
     }
 
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
     function renderActiveConversation() {
       const conv = state.conversations.find((c) => c.id === state.activeId);
 
@@ -1006,6 +954,9 @@
       chatSubtitleEl.textContent = conv.subtitle || "";
 
       chatBodyEl.innerHTML = "";
+
+      const q = state.searchQuery.trim();
+      const highlightRegex = q ? new RegExp(escapeRegExp(q), "gi") : null;
 
       conv.messages.forEach((msg) => {
         const row = document.createElement("div");
@@ -1034,23 +985,20 @@
         const contentDiv = document.createElement("div");
         contentDiv.className = "markdown-body";
         try {
-          contentDiv.innerHTML = marked.parse(msg.content || "");
+          contentDiv.innerHTML = marked.parse(msg.content);
         } catch {
-          contentDiv.textContent = msg.content || "";
+          contentDiv.textContent = msg.content;
+        }
+
+        // 搜索词高亮
+        if (highlightRegex) {
+          contentDiv.innerHTML = contentDiv.innerHTML.replace(
+            highlightRegex,
+            (m) => `<mark>${m}</mark>`
+          );
         }
 
         bubble.appendChild(contentDiv);
-
-        if (msg.images && msg.images.length) {
-          msg.images.forEach((ptr) => {
-            const url = resolveImageUrl(ptr);
-            if (!url) return;
-            const img = document.createElement("img");
-            img.className = "chat-image";
-            img.src = url;
-            bubble.appendChild(img);
-          });
-        }
 
         const metaEl = document.createElement("div");
         metaEl.className = "meta-line";
