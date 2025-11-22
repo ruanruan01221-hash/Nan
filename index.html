@@ -1,210 +1,880 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ChatGPT 聊天记录查看器</title>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<style>
-body {
-  margin: 0;
-  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-  background-color: #fef6fb;
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-}
-#sidebar {
-  width: 250px;
-  background: linear-gradient(180deg, #ffd6ec, #ffe6f7);
-  border-right: 2px solid #f3bdd2;
-  padding: 15px;
-  box-sizing: border-box;
-  overflow-y: auto;
-}
-#sidebar h2 {
-  text-align: center;
-  color: #b54a74;
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-#chatList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-#chatList li {
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  background-color: #fff4fa;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-#chatList li:hover {
-  background-color: #ffe1ef;
-}
-#chatList li.active {
-  background-color: #ffb6d9;
-  color: white;
-}
-#main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background-image: url('https://i.imgur.com/rvRYT0L.jpg');
-  background-size: cover;
-  background-position: center;
-  backdrop-filter: blur(5px);
-}
-#chatContainer {
-  flex: 1;
-  padding: 15px;
-  overflow-y: auto;
-  background-color: rgba(255, 255, 255, 0.65);
-  border-radius: 15px;
-  margin: 10px;
-}
-.message {
-  margin-bottom: 15px;
-  display: flex;
-  align-items: flex-start;
-  max-width: 80%;
-}
-.message.user {
-  flex-direction: row-reverse;
-  align-self: flex-end;
-  text-align: right;
-}
-.message.assistant {
-  align-self: flex-start;
-  text-align: left;
-}
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin: 0 10px;
-  object-fit: cover;
-}
-.bubble {
-  border-radius: 12px;
-  padding: 10px 15px;
-  line-height: 1.5;
-  background-color: #ffffff;
-  border: 1px solid #f6cadd;
-  max-width: 100%;
-}
-.user .bubble {
-  background-color: #ffdeef;
-}
-.timestamp {
-  font-size: 11px;
-  color: #999;
-  margin-bottom: 3px;
-}
-#controls {
-  padding: 10px;
-  background-color: #ffe6f5;
-  border-top: 1px solid #f3bdd2;
-  text-align: center;
-}
-input[type="file"] {
-  display: none;
-}
-label.upload-btn {
-  background-color: #ffb6d9;
-  color: white;
-  padding: 8px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: bold;
-}
-label.upload-btn:hover {
-  background-color: #ff9fc9;
-}
-</style>
+  <meta charset="UTF-8" />
+  <title>ChatGPT 聊天查看器</title>
+  <!-- Markdown 渲染 -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    :root {
+      --sidebar-width: 260px;
+      --accent: #ff97c2;
+      --accent-soft: #ffe4f1;
+      --assistant-bubble: #ffffff;
+      --user-bubble: #ffbcd8;
+      --chat-bg: #ffeef6;
+      --border-soft: #f3cadd;
+      --text-main: #333333;
+      --text-sub: #888888;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+        "Microsoft YaHei", system-ui, sans-serif;
+      background: var(--chat-bg);
+      background-size: cover;
+      background-position: center;
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .app {
+      margin: 18px;
+      border-radius: 24px;
+      overflow: hidden;
+      width: min(1200px, 100%);
+      height: calc(100vh - 36px);
+      display: flex;
+      box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(14px);
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    /* 左侧侧边栏 */
+
+    .sidebar {
+      width: var(--sidebar-width);
+      border-right: 1px solid var(--border-soft);
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #ffeaf4 0%, #ffffff 40%, #fffafc 100%);
+    }
+
+    .sidebar-header {
+      padding: 16px 18px 10px;
+      border-bottom: 1px dashed var(--border-soft);
+    }
+
+    .sidebar-header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #444;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-header-title span.emoji {
+      font-size: 20px;
+    }
+
+    .file-input-row {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-sub);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .file-input-row input[type="file"] {
+      font-size: 12px;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #b38aa0;
+      line-height: 1.4;
+    }
+
+    .conversation-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 6px 10px;
+    }
+
+    .conversation-item {
+      border-radius: 14px;
+      padding: 10px 10px;
+      margin: 4px 4px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .conversation-item::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 1px solid transparent;
+      pointer-events: none;
+    }
+
+    .conversation-item:hover {
+      background: rgba(255, 224, 239, 0.7);
+    }
+
+    .conversation-item.active {
+      background: #ffd8eb;
+      box-shadow: 0 0 0 1px #ff9ac6 inset;
+    }
+
+    .conversation-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #444;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conversation-meta {
+      font-size: 11px;
+      color: var(--text-sub);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #fff5fb;
+      border: 1px solid #ffd1ea;
+      font-size: 10px;
+      color: #b05787;
+    }
+
+    /* 右侧主区域 */
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3CradialGradient id='g' cx='0.3' cy='0.2' r='1'%3E%3Cstop offset='0' stop-color='%23ffe0f1'/%3E%3Cstop offset='1' stop-color='%23ffffff' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='160' height='160' fill='%23fff6fb'/%3E%3Ccircle cx='12' cy='18' r='32' fill='url(%23g)'/%3E%3Ccircle cx='140' cy='130' r='32' fill='url(%23g)'/%3E%3C/svg%3E")
+        repeat;
+    }
+
+    .main-header {
+      padding: 12px 18px 10px;
+      border-bottom: 1px solid rgba(255, 210, 231, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, #ffe7f1, #ffffff);
+    }
+
+    .main-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #444;
+    }
+
+    .chat-subtitle {
+      font-size: 11px;
+      color: #aa889c;
+    }
+
+    .settings {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      align-items: center;
+      justify-content: flex-end;
+      max-width: 480px;
+    }
+
+    .settings label {
+      font-size: 11px;
+      color: #a07f94;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .settings input[type="url"],
+    .settings input[type="text"] {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #e9c3db;
+      min-width: 120px;
+      outline: none;
+    }
+
+    .settings input[type="color"] {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid #e9c3db;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .settings input[type="file"] {
+      font-size: 11px;
+      max-width: 180px;
+    }
+
+    .settings button {
+      border: none;
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 11px;
+      background: #ff9ac6;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(255, 140, 182, 0.4);
+    }
+
+    .settings button:hover {
+      background: #ff7daf;
+    }
+
+    /* 聊天消息区 */
+
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 18px 18px;
+      position: relative;
+    }
+
+    .chat-empty {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      color: #b499aa;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .chat-empty-emoji {
+      font-size: 32px;
+    }
+
+    .message-row {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+
+    .message-row.assistant {
+      flex-direction: row;
+    }
+
+    .message-row.user {
+      flex-direction: row-reverse;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .avatar.assistant {
+      background-color: #ffffff;
+      color: #ff83b8;
+    }
+
+    .avatar.user {
+      background-color: #ffbcd8;
+      color: #ffffff;
+    }
+
+    .bubble-wrapper {
+      max-width: min(100%, 720px);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .message-row.user .bubble-wrapper {
+      align-items: flex-end;
+    }
+
+    .timestamp {
+      font-size: 11px;
+      color: #b59ab0;
+      margin-bottom: 4px;
+    }
+
+    .bubble {
+      padding: 8px 10px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.5;
+      position: relative;
+      box-shadow:
+        0 2px 5px rgba(0, 0, 0, 0.06),
+        0 0 0 0.5px rgba(255, 255, 255, 0.8);
+      word-break: break-word;
+    }
+
+    .message-row.assistant .bubble {
+      background: var(--assistant-bubble);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-row.user .bubble {
+      background: var(--user-bubble);
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble .markdown-body p {
+      margin: 0 0 4px;
+    }
+
+    .bubble .markdown-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .bubble .markdown-body code {
+      background: rgba(0, 0, 0, 0.04);
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .bubble .markdown-body pre {
+      background: #1e1e1e;
+      color: #f4f4f4;
+      padding: 8px 10px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+
+    .bubble .markdown-body ul,
+    .bubble .markdown-body ol {
+      margin: 0 0 4px 18px;
+      padding: 0;
+    }
+
+    .bubble .markdown-body h1,
+    .bubble .markdown-body h2,
+    .bubble .markdown-body h3 {
+      margin: 4px 0;
+      font-size: 15px;
+    }
+
+    .bubble .markdown-body a {
+      color: #e16ea5;
+      text-decoration: none;
+      border-bottom: 1px dashed #e16ea5;
+    }
+
+    .bubble .markdown-body a:hover {
+      text-decoration: underline;
+    }
+
+    /* 底部小提示 */
+
+    .main-footer {
+      padding: 6px 14px 9px;
+      font-size: 11px;
+      color: #b18ca3;
+      border-top: 1px dashed rgba(255, 210, 231, 0.9);
+      text-align: right;
+    }
+
+    .main-footer span {
+      color: #ff8bbf;
+    }
+
+    /* 滚动条 */
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #e7bfd6;
+      border-radius: 999px;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        margin: 0;
+        border-radius: 0;
+        height: 100vh;
+      }
+
+      .sidebar {
+        display: none;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="app">
+    <!-- 左侧导航 -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-header-title">
+          <span class="emoji">🍓</span>
+          <span>ChatGPT 聊天列表</span>
+        </div>
+        <div class="file-input-row">
+          <label>
+            导入聊天文件（支持多个）：
+            <input id="fileInput" type="file" multiple accept=".json,.txt" />
+          </label>
+          <div class="hint">
+            · 优先按 JSON 解析 ChatGPT 导出文件，<br />
+            · 如果不是标准 JSON，会按类似
+            <code>【user】[时间]</code> 的文本格式解析。
+          </div>
+        </div>
+      </div>
+      <div id="conversationList" class="conversation-list"></div>
+    </aside>
 
-<div id="sidebar">
-  <h2>聊天窗口</h2>
-  <ul id="chatList"></ul>
-</div>
+    <!-- 右侧主界面 -->
+    <section class="main">
+      <header class="main-header">
+        <div class="main-header-left">
+          <div>
+            <div class="chat-title" id="chatTitle">还没有打开会话</div>
+            <div class="chat-subtitle" id="chatSubtitle">
+              导入导出的对话文件，就能像聊天软件一样看历史记录了。
+            </div>
+          </div>
+        </div>
+        <div class="settings">
+          <label>
+            用户头像 URL
+            <input type="url" id="userAvatarUrl" placeholder="可填图片链接" />
+          </label>
+          <label>
+            助手头像 URL
+            <input type="url" id="assistantAvatarUrl" placeholder="可填图片链接" />
+          </label>
+          <label>
+            聊天背景色
+            <input type="color" id="bgColor" value="#ffeef6" />
+          </label>
+          <label>
+            背景图
+            <input type="file" id="bgImageInput" accept="image/*" />
+          </label>
+          <button id="applyAvatarBtn">应用头像</button>
+        </div>
+      </header>
 
-<div id="main">
-  <div id="chatContainer"><p style="text-align:center;color:#b54a74;">请先上传 JSON 文件 📂</p></div>
-  <div id="controls">
-    <input type="file" id="fileInput" accept=".json">
-    <label for="fileInput" class="upload-btn">上传聊天记录</label>
+      <div id="chatBody" class="chat-body">
+        <div class="chat-empty">
+          <div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ა</div>
+          <div>把 ChatGPT 导出的聊天 JSON / 文本拖进来，<br>左边选窗口，右边就会出现完整聊天记录哦。</div>
+        </div>
+      </div>
+
+      <footer class="main-footer">
+        <span>提示：</span>仅展示 <code>user</code> / <code>assistant</code> 消息，忽略 system / tool，
+        空内容自动跳过。
+      </footer>
+    </section>
   </div>
-</div>
 
-<script>
-let chats = [];
-const userAvatar = 'https://i.imgur.com/w6XyKQO.png'; // 用户头像，可自行更换
-const assistantAvatar = 'https://i.imgur.com/7yUvePI.png'; // 助手头像，可自行更换
-
-document.getElementById("fileInput").addEventListener("change", function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(event) {
-    try {
-      const data = JSON.parse(event.target.result);
-      chats = data.map((c, i) => ({ id: i, title: c.title || "未命名聊天", messages: c.mapping }));
-      renderChatList();
-    } catch (err) {
-      alert("文件格式错误或解析失败！");
-    }
-  };
-  reader.readAsText(file);
-});
-
-function renderChatList() {
-  const list = document.getElementById("chatList");
-  list.innerHTML = "";
-  chats.forEach(chat => {
-    const li = document.createElement("li");
-    li.textContent = chat.title;
-    li.onclick = () => {
-      document.querySelectorAll("#chatList li").forEach(l => l.classList.remove("active"));
-      li.classList.add("active");
-      renderMessages(chat.messages);
+  <script>
+    // 全局状态
+    const state = {
+      conversations: [], // { id, title, subtitle, messages: [{role, timestamp, content}] }
+      activeId: null,
+      avatars: {
+        user: "",
+        assistant: ""
+      }
     };
-    list.appendChild(li);
-  });
-}
 
-function renderMessages(messages) {
-  const container = document.getElementById("chatContainer");
-  container.innerHTML = "";
-  const msgList = Object.values(messages)
-    .filter(m => m.message && (m.message.role === "user" || m.message.role === "assistant"))
-    .filter(m => m.message.content?.parts?.[0]?.trim() !== "")
-    .map(m => ({
-      role: m.message.role,
-      time: new Date(m.message.create_time * 1000).toLocaleString('zh-CN', { hour12: false }),
-      text: m.message.content.parts[0]
-    }));
-  msgList.forEach(msg => {
-    const div = document.createElement("div");
-    div.className = `message ${msg.role}`;
+    // Markdown 设置
+    marked.setOptions({
+      breaks: true,
+      gfm: true
+    });
 
-    const avatar = document.createElement("img");
-    avatar.className = "avatar";
-    avatar.src = msg.role === 'user' ? userAvatar : assistantAvatar;
+    const fileInput = document.getElementById("fileInput");
+    const conversationListEl = document.getElementById("conversationList");
+    const chatBodyEl = document.getElementById("chatBody");
+    const chatTitleEl = document.getElementById("chatTitle");
+    const chatSubtitleEl = document.getElementById("chatSubtitle");
 
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-    bubble.innerHTML = `<span class='timestamp'>${msg.time}</span>` + marked.parse(msg.text);
+    const userAvatarUrlInput = document.getElementById("userAvatarUrl");
+    const assistantAvatarUrlInput = document.getElementById("assistantAvatarUrl");
+    const bgColorInput = document.getElementById("bgColor");
+    const bgImageInput = document.getElementById("bgImageInput");
+    const applyAvatarBtn = document.getElementById("applyAvatarBtn");
 
-    div.appendChild(avatar);
-    div.appendChild(bubble);
-    container.appendChild(div);
-  });
-  container.scrollTop = container.scrollHeight;
-}
-</script>
+    fileInput.addEventListener("change", handleFiles, false);
+    applyAvatarBtn.addEventListener("click", applyAvatarSettings);
+    bgColorInput.addEventListener("input", (e) => {
+      document.documentElement.style.setProperty("--chat-bg", e.target.value);
+      document.body.style.backgroundColor = e.target.value;
+    });
+
+    bgImageInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        document.body.style.backgroundImage = `url(${ev.target.result})`;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function applyAvatarSettings() {
+      state.avatars.user = userAvatarUrlInput.value.trim();
+      state.avatars.assistant = assistantAvatarUrlInput.value.trim();
+      renderActiveConversation();
+    }
+
+    function handleFiles(e) {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+
+      files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const text = ev.target.result;
+          let convs = [];
+          // 1. 先尝试 JSON 解析（ChatGPT 官方导出）
+          try {
+            const json = JSON.parse(text);
+            convs = parseFromJsonExport(json, file.name);
+          } catch (err) {
+            // 2. 否则按你这份示例里的“文本格式”解析
+            convs = [parseFromTextTranscript(text, file.name)];
+          }
+
+          // 合并到全局状态
+          convs.forEach((c) => {
+            if (!c.messages || !c.messages.length) return;
+            state.conversations.push(c);
+          });
+
+          if (!state.activeId && state.conversations.length) {
+            state.activeId = state.conversations[0].id;
+          }
+
+          renderConversationList();
+          renderActiveConversation();
+        };
+        reader.readAsText(file, "utf-8");
+      });
+    }
+
+    /* --------------------- 数据解析 --------------------- */
+
+    // 解析 ChatGPT 官方导出 JSON（大致结构）
+    function parseFromJsonExport(json, filename) {
+      const convs = [];
+
+      // 形式一：{ conversations: [...] }
+      let arr = [];
+      if (Array.isArray(json)) {
+        arr = json;
+      } else if (Array.isArray(json.conversations)) {
+        arr = json.conversations;
+      } else if (json.mapping && json.title) {
+        arr = [json];
+      }
+
+      // Fallback：不是这种结构就不解析
+      if (!arr.length) return [];
+
+      arr.forEach((conv, index) => {
+        const title =
+          conv.title ||
+          `${stripExt(filename)} #${index + 1}`;
+        const messages = [];
+
+        if (conv.mapping) {
+          // ChatGPT 导出里常见 mapping 树结构
+          const mapping = conv.mapping;
+          let rootId = conv.current_node;
+          if (!rootId) {
+            // 随便找一个 message 存在的节点当起点
+            rootId = Object.keys(mapping).find(
+              (id) => mapping[id] && mapping[id].message
+            );
+          }
+
+          const visited = new Set();
+
+          function walk(nodeId) {
+            if (!nodeId || visited.has(nodeId)) return;
+            visited.add(nodeId);
+            const node = mapping[nodeId];
+            if (!node || !node.message) return;
+
+            const msg = node.message;
+            const role = msg.author && msg.author.role;
+            if (role === "user" || role === "assistant") {
+              const ts = msg.create_time
+                ? formatTimestampFromSeconds(msg.create_time)
+                : "";
+              let content = "";
+              if (msg.content) {
+                if (Array.isArray(msg.content.parts)) {
+                  content = msg.content.parts.join("\n");
+                } else if (typeof msg.content === "string") {
+                  content = msg.content;
+                } else if (msg.content.text) {
+                  content = msg.content.text;
+                }
+              }
+              if (content && content.trim()) {
+                messages.push({
+                  role,
+                  timestamp: ts,
+                  content
+                });
+              }
+            }
+
+            const children = node.children || [];
+            if (children.length) {
+              // 默认沿着第一条主线走
+              walk(children[0]);
+            }
+          }
+
+          walk(rootId);
+        } else if (Array.isArray(conv.messages)) {
+          // 形式二：简单 messages 数组
+          conv.messages.forEach((m) => {
+            if (!m || !m.role) return;
+            const role = m.role;
+            if (role !== "user" && role !== "assistant") return;
+            const ts = m.create_time
+              ? formatTimestampFromSeconds(m.create_time)
+              : "";
+            let content = "";
+            if (m.content) {
+              if (Array.isArray(m.content.parts)) {
+                content = m.content.parts.join("\n");
+              } else if (typeof m.content === "string") {
+                content = m.content;
+              } else if (m.content.text) {
+                content = m.content.text;
+              }
+            }
+            if (content && content.trim()) {
+              messages.push({
+                role,
+                timestamp: ts,
+                content
+              });
+            }
+          });
+        }
+
+        if (messages.length) {
+          const firstTime = messages[0].timestamp || "";
+          convs.push({
+            id: conv.id || `${filename}-${index}`,
+            title,
+            subtitle: firstTime
+              ? `从 ${firstTime} 开始 · ${messages.length} 条消息`
+              : `${messages.length} 条消息`,
+            messages
+          });
+        }
+      });
+
+      return convs;
+    }
+
+    // 解析你这份示例里的“文本格式”
+    // 只认形如： 【user】 [2025-06-29 05:35:19] 内容……
+    function parseFromTextTranscript(text, filename) {
+      const messages = [];
+      const re =
+        /【(user|assistant)】\s*\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s*([\s\S]*?)(?=\n【(?:user|assistant)】\s*\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]|$)/g;
+
+      let match;
+      while ((match = re.exec(text)) !== null) {
+        const role = match[1];
+        const ts = match[2];
+        const contentRaw = match[3] || "";
+        const content = contentRaw.trim();
+        if (!content) continue; // 空的跳过
+        messages.push({
+          role,
+          timestamp: ts,
+          content
+        });
+      }
+
+      return {
+        id: `txt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        title: stripExt(filename),
+        subtitle: messages.length
+          ? `从 ${messages[0].timestamp} 开始 · ${messages.length} 条消息`
+          : "未解析到有效消息",
+        messages
+      };
+    }
+
+    function stripExt(name) {
+      return name.replace(/\.[^.]+$/, "");
+    }
+
+    function formatTimestampFromSeconds(sec) {
+      const d = new Date(sec * 1000);
+      const pad = (n) => String(n).padStart(2, "0");
+      const y = d.getFullYear();
+      const m = pad(d.getMonth() + 1);
+      const day = pad(d.getDate());
+      const h = pad(d.getHours());
+      const mi = pad(d.getMinutes());
+      const s = pad(d.getSeconds());
+      return `${y}-${m}-${day} ${h}:${mi}:${s}`;
+    }
+
+    /* --------------------- 渲染 --------------------- */
+
+    function renderConversationList() {
+      conversationListEl.innerHTML = "";
+      if (!state.conversations.length) return;
+
+      state.conversations.forEach((conv) => {
+        const item = document.createElement("div");
+        item.className = "conversation-item";
+        if (conv.id === state.activeId) item.classList.add("active");
+
+        item.innerHTML = `
+          <div class="conversation-title" title="${conv.title}">
+            ${conv.title}
+          </div>
+          <div class="conversation-meta">
+            <span>${conv.subtitle || ""}</span>
+            <span class="badge">${conv.messages.length} 条</span>
+          </div>
+        `;
+
+        item.addEventListener("click", () => {
+          state.activeId = conv.id;
+          renderConversationList();
+          renderActiveConversation();
+        });
+
+        conversationListEl.appendChild(item);
+      });
+    }
+
+    function renderActiveConversation() {
+      const conv = state.conversations.find((c) => c.id === state.activeId);
+
+      if (!conv) {
+        chatTitleEl.textContent = "还没有打开会话";
+        chatSubtitleEl.textContent =
+          "左侧导入并选择一个会话，就能开始回顾聊天啦。";
+        chatBodyEl.innerHTML = `
+          <div class="chat-empty">
+            <div class="chat-empty-emoji">₍ᐢ. ̫ .ᐢ₎</div>
+            <div>这里现在还空空的……<br>等你把对话导进来，我再陪你一起回顾。</div>
+          </div>
+        `;
+        return;
+      }
+
+      chatTitleEl.textContent = conv.title;
+      chatSubtitleEl.textContent = conv.subtitle || "";
+
+      chatBodyEl.innerHTML = "";
+
+      conv.messages.forEach((msg) => {
+        const row = document.createElement("div");
+        row.className = `message-row ${msg.role}`;
+
+        const avatarEl = document.createElement("div");
+        avatarEl.className = `avatar ${msg.role}`;
+
+        const avatarUrl =
+          msg.role === "user"
+            ? state.avatars.user
+            : state.avatars.assistant;
+
+        if (avatarUrl) {
+          avatarEl.style.backgroundImage = `url(${avatarUrl})`;
+          avatarEl.textContent = "";
+        } else {
+          avatarEl.style.backgroundImage = "none";
+          avatarEl.textContent = msg.role === "user" ? "你" : "G";
+        }
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "bubble-wrapper";
+
+        const tsEl = document.createElement("div");
+        tsEl.className = "timestamp";
+        tsEl.textContent = msg.timestamp || "";
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "markdown-body";
+        try {
+          contentDiv.innerHTML = marked.parse(msg.content);
+        } catch (e) {
+          contentDiv.textContent = msg.content;
+        }
+
+        bubble.appendChild(contentDiv);
+        wrapper.appendChild(tsEl);
+        wrapper.appendChild(bubble);
+
+        row.appendChild(avatarEl);
+        row.appendChild(wrapper);
+
+        chatBodyEl.appendChild(row);
+      });
+
+      // 滚到底部
+      chatBodyEl.scrollTop = chatBodyEl.scrollHeight;
+    }
+  </script>
 </body>
 </html>
