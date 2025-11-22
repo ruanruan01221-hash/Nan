@@ -246,7 +246,7 @@
 
     .message-row {
       display: flex;
-      align-items: flex-start;
+      align-items: flex-end;
       margin-bottom: 10px;
       gap: 8px;
     }
@@ -281,14 +281,8 @@
 
     .message-row.user .bubble-wrapper { align-items: flex-end; }
 
-    .timestamp {
-      font-size: 11px;
-      color: #b59ab0;
-      margin-bottom: 4px;
-    }
-
     .bubble {
-      padding: 8px 10px;
+      padding: 8px 12px;
       border-radius: 18px;
       font-size: 14px;
       line-height: 1.5;
@@ -301,12 +295,39 @@
 
     .message-row.assistant .bubble {
       background: var(--assistant-bubble);
-      border-bottom-left-radius: 4px;
+      border-bottom-left-radius: 6px;
     }
 
     .message-row.user .bubble {
       background: var(--user-bubble);
-      border-bottom-right-radius: 4px;
+      border-bottom-right-radius: 6px;
+    }
+
+    /* 小箭头 */
+    .message-row.assistant .bubble::after {
+      content: "";
+      position: absolute;
+      left: -6px;
+      top: 14px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 8px 8px 8px 0;
+      border-color: transparent var(--assistant-bubble) transparent transparent;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
+    }
+
+    .message-row.user .bubble::after {
+      content: "";
+      position: absolute;
+      right: -6px;
+      top: 14px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 8px 0 8px 8px;
+      border-color: transparent transparent transparent var(--user-bubble);
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
     }
 
     .bubble .markdown-body p { margin: 0 0 4px; }
@@ -348,6 +369,13 @@
     }
 
     .bubble .markdown-body a:hover { text-decoration: underline; }
+
+    /* 时间+模型 放在气泡下面 */
+    .meta-line {
+      margin-top: 2px;
+      font-size: 11px;
+      color: #b59ab0;
+    }
 
     .main-footer {
       padding: 6px 14px 9px;
@@ -440,15 +468,14 @@
 
       <footer class="main-footer">
         <span>提示：</span>仅展示 <code>user</code> / <code>assistant</code> 消息，忽略 system / tool，
-        空内容自动跳过。
+        空内容自动跳过。若导出文件里带模型字段，会显示在时间后面。
       </footer>
     </section>
   </div>
 
   <script>
-    // 全局状态
     const state = {
-      conversations: [], // { id, title, subtitle, messages: [{role, timestamp, content}] }
+      conversations: [],
       activeId: null,
       avatars: {
         user: "",
@@ -540,7 +567,7 @@
       });
     }
 
-    /* ----------- 数据解析：新版 JSON 全量抓取 ----------- */
+    /* ----------- 解析 JSON：全量消息 + 模型 ----------- */
     function parseFromJsonExport(json, filename) {
       const convs = [];
       let arr = [];
@@ -560,7 +587,6 @@
         const messages = [];
 
         if (conv.mapping) {
-          // 所有节点都扫一遍，按 create_time 排序
           Object.values(conv.mapping).forEach((node) => {
             if (!node || !node.message) return;
             const msg = node.message;
@@ -584,10 +610,13 @@
             const rawTime = msg.create_time || 0;
             const timestamp = rawTime ? formatTimestampFromSeconds(rawTime) : "";
 
+            const m = detectModel(msg);
+
             messages.push({
               role,
               timestamp,
               content: trimmed,
+              model: m,
               _rawTime: rawTime
             });
           });
@@ -618,10 +647,13 @@
               ? formatTimestampFromSeconds(m.create_time)
               : "";
 
+            const model = detectModel(m);
+
             messages.push({
               role,
               timestamp,
               content: trimmed,
+              model,
               _rawTime: rawTime
             });
           });
@@ -646,6 +678,18 @@
       return convs;
     }
 
+    // 可能的模型字段来源：metadata.model / metadata.model_slug / model / model_slug
+    function detectModel(msg) {
+      const md = msg.metadata || {};
+      return (
+        md.model_slug ||
+        md.model ||
+        msg.model_slug ||
+        msg.model ||
+        "" // 没有就留空
+      );
+    }
+
     // 文本转录格式： 【user】[2025-06-29 05:35:19] 内容……
     function parseFromTextTranscript(text, filename) {
       const messages = [];
@@ -659,7 +703,7 @@
         const contentRaw = match[3] || "";
         const content = contentRaw.trim();
         if (!content) continue;
-        messages.push({ role, timestamp: ts, content });
+        messages.push({ role, timestamp: ts, content, model: "" });
       }
 
       return {
@@ -718,6 +762,13 @@
       });
     }
 
+    function buildMetaText(msg) {
+      const parts = [];
+      if (msg.timestamp) parts.push(msg.timestamp);
+      if (msg.model) parts.push(msg.model);
+      return parts.join(" · ");
+    }
+
     function renderActiveConversation() {
       const conv = state.conversations.find((c) => c.id === state.activeId);
 
@@ -760,10 +811,6 @@
         const wrapper = document.createElement("div");
         wrapper.className = "bubble-wrapper";
 
-        const tsEl = document.createElement("div");
-        tsEl.className = "timestamp";
-        tsEl.textContent = msg.timestamp || "";
-
         const bubble = document.createElement("div");
         bubble.className = "bubble";
 
@@ -776,8 +823,13 @@
         }
 
         bubble.appendChild(contentDiv);
-        wrapper.appendChild(tsEl);
+
+        const metaEl = document.createElement("div");
+        metaEl.className = "meta-line";
+        metaEl.textContent = buildMetaText(msg);
+
         wrapper.appendChild(bubble);
+        wrapper.appendChild(metaEl);
         row.appendChild(avatarEl);
         row.appendChild(wrapper);
 
