@@ -45,15 +45,17 @@
         0 0 0 1px rgba(255, 255, 255, 0.7);
       backdrop-filter: blur(14px);
       background: rgba(255, 255, 255, 0.88);
+      position: relative;
     }
 
-    /* 左侧侧边栏（桌面端用） */
+    /* 侧栏和遮罩 */
     .sidebar {
       width: var(--sidebar-width);
       border-right: 1px solid var(--border-soft);
       display: flex;
       flex-direction: column;
       background: linear-gradient(180deg, #ffeaf4 0%, #ffffff 40%, #fffafc 100%);
+      z-index: 10;
     }
 
     .sidebar-header {
@@ -70,9 +72,7 @@
       gap: 8px;
     }
 
-    .sidebar-header-title span.emoji {
-      font-size: 20px;
-    }
+    .sidebar-header-title span.emoji { font-size: 20px; }
 
     .file-input-row {
       margin-top: 10px;
@@ -83,9 +83,7 @@
       gap: 6px;
     }
 
-    .file-input-row input[type="file"] {
-      font-size: 12px;
-    }
+    .file-input-row input[type="file"] { font-size: 12px; }
 
     .hint {
       font-size: 11px;
@@ -110,9 +108,7 @@
       transition: all 0.15s ease;
     }
 
-    .conversation-item:hover {
-      background: rgba(255, 224, 239, 0.7);
-    }
+    .conversation-item:hover { background: rgba(255, 224, 239, 0.7); }
 
     .conversation-item.active {
       background: #ffd8eb;
@@ -145,7 +141,16 @@
       color: #b05787;
     }
 
-    /* 右侧主区域 */
+    .sidebar-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.15);
+      z-index: 5;
+      display: none;
+    }
+    .sidebar-backdrop.active { display: block; }
+
+    /* 主区域 */
     .main {
       flex: 1;
       display: flex;
@@ -155,21 +160,21 @@
     }
 
     .main-header {
-      padding: 12px 18px 10px;
+      padding: 10px 12px;
       border-bottom: 1px solid rgba(255, 210, 231, 0.9);
       display: flex;
       align-items: center;
       justify-content: space-between;
       background: linear-gradient(90deg, #ffe7f1, #ffffff);
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
     .main-header-left {
       display: flex;
       align-items: center;
-      gap: 10px;
-      min-width: 180px;
+      gap: 8px;
+      min-width: 0;
       flex: 1;
     }
 
@@ -177,11 +182,46 @@
       font-size: 16px;
       font-weight: 600;
       color: #444;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .chat-subtitle {
       font-size: 11px;
       color: #aa889c;
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .icon-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 14px;
+      background: #ffd1e8;
+      color: #75415f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.16);
+    }
+    .icon-btn:active { transform: translateY(1px); }
+
+    .settings-wrapper {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .settings-toggle-label {
+      font-size: 11px;
+      color: #a67792;
     }
 
     .settings {
@@ -194,6 +234,8 @@
       font-size: 11px;
       color: #a07f94;
     }
+
+    .settings.collapsed { display: none; }
 
     .settings label {
       display: flex;
@@ -222,7 +264,6 @@
       font-size: 10px;
     }
 
-    /* 聊天消息区 */
     .chat-body {
       flex: 1;
       overflow-y: auto;
@@ -242,9 +283,7 @@
       text-align: center;
     }
 
-    .chat-empty-emoji {
-      font-size: 32px;
-    }
+    .chat-empty-emoji { font-size: 32px; }
 
     .message-row {
       display: flex;
@@ -359,7 +398,6 @@
       border-top: 1px dashed rgba(255, 210, 231, 0.9);
       text-align: right;
     }
-
     .main-footer span { color: #ff8bbf; }
 
     ::-webkit-scrollbar { width: 6px; }
@@ -369,7 +407,7 @@
       border-radius: 999px;
     }
 
-    /* 窄屏（iPhone）优化 */
+    /* 手机适配：侧栏变滑出式 */
     @media (max-width: 900px) {
       .app {
         margin: 0;
@@ -377,19 +415,30 @@
         width: 100%;
         height: 100vh;
       }
+
       .sidebar {
-        display: none; /* 手机上隐藏左侧列表，只保留顶部导入按钮 */
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 80%;
+        max-width: 320px;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        box-shadow: 6px 0 18px rgba(0,0,0,0.15);
       }
-      .bubble {
-        font-size: 15px;
-      }
+      .sidebar.open { transform: translateX(0); }
+
+      .bubble { font-size: 15px; }
     }
   </style>
 </head>
 <body>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
   <div class="app">
-    <!-- 左侧导航（桌面端） -->
-    <aside class="sidebar">
+    <!-- 左侧导航 -->
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-header-title">
           <span class="emoji">🍓</span>
@@ -413,43 +462,48 @@
     <section class="main">
       <header class="main-header">
         <div class="main-header-left">
-          <div>
+          <button class="icon-btn" id="toggleSidebarBtn">☰</button>
+          <div class="title-block">
             <div class="chat-title" id="chatTitle">还没有打开会话</div>
             <div class="chat-subtitle" id="chatSubtitle">
               导入导出的对话文件，就能像聊天软件一样看历史记录了。
             </div>
           </div>
         </div>
-        <div class="settings">
-          <!-- 新增：顶部导入按钮（手机也能点到） -->
-          <label>
-            导入聊天
-            <input id="fileInputHeader" type="file" multiple accept=".json,.txt" />
-          </label>
-          <label>
-            用户头像
-            <input type="file" id="userAvatarFile" accept="image/*" />
-          </label>
-          <label>
-            助手头像
-            <input type="file" id="assistantAvatarFile" accept="image/*" />
-          </label>
-          <label>
-            聊天背景色
-            <input type="color" id="bgColor" value="#ffeef6" />
-          </label>
-          <label>
-            背景图
-            <input type="file" id="bgImageInput" accept="image/*" />
-          </label>
-          <small>头像/背景/聊天文件均在本地读取，不会上传。</small>
+
+        <div class="settings-wrapper">
+          <button class="icon-btn" id="toggleSettingsBtn">⚙</button>
+          <span class="settings-toggle-label">设置</span>
+          <div class="settings collapsed" id="settingsPanel">
+            <label>
+              导入聊天
+              <input id="fileInputHeader" type="file" multiple accept=".json,.txt" />
+            </label>
+            <label>
+              用户头像
+              <input type="file" id="userAvatarFile" accept="image/*" />
+            </label>
+            <label>
+              助手头像
+              <input type="file" id="assistantAvatarFile" accept="image/*" />
+            </label>
+            <label>
+              聊天背景色
+              <input type="color" id="bgColor" value="#ffeef6" />
+            </label>
+            <label>
+              背景图
+              <input type="file" id="bgImageInput" accept="image/*" />
+            </label>
+            <small>文件/头像/背景均在本地读取，不会上传。</small>
+          </div>
         </div>
       </header>
 
       <div id="chatBody" class="chat-body">
         <div class="chat-empty">
           <div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ა</div>
-          <div>把 ChatGPT 导出的聊天 JSON / 文本拖进来或点上面的“导入聊天”，<br>左边选窗口，右边就会出现完整聊天记录哦。</div>
+          <div>把 ChatGPT 导出的聊天 JSON / 文本拖进来或点右上角“⚙→导入聊天”，<br>左边选窗口，右边就会出现完整聊天记录哦。</div>
         </div>
       </div>
 
@@ -470,6 +524,10 @@
 
     marked.setOptions({ breaks: true, gfm: true });
 
+    const sidebar = document.getElementById("sidebar");
+    const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+    const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
+
     const fileInputSidebar = document.getElementById("fileInput");
     const fileInputHeader = document.getElementById("fileInputHeader");
     const conversationListEl = document.getElementById("conversationList");
@@ -481,6 +539,27 @@
     const bgImageInput = document.getElementById("bgImageInput");
     const userAvatarFileInput = document.getElementById("userAvatarFile");
     const assistantAvatarFileInput = document.getElementById("assistantAvatarFile");
+
+    const settingsPanel = document.getElementById("settingsPanel");
+    const toggleSettingsBtn = document.getElementById("toggleSettingsBtn");
+
+    function openSidebar() {
+      sidebar.classList.add("open");
+      sidebarBackdrop.classList.add("active");
+    }
+    function closeSidebar() {
+      sidebar.classList.remove("open");
+      sidebarBackdrop.classList.remove("active");
+    }
+    toggleSidebarBtn.addEventListener("click", () => {
+      if (sidebar.classList.contains("open")) closeSidebar();
+      else openSidebar();
+    });
+    sidebarBackdrop.addEventListener("click", closeSidebar);
+
+    toggleSettingsBtn.addEventListener("click", () => {
+      settingsPanel.classList.toggle("collapsed");
+    });
 
     if (fileInputSidebar) fileInputSidebar.addEventListener("change", handleFiles, false);
     if (fileInputHeader) fileInputHeader.addEventListener("change", handleFiles, false);
@@ -522,6 +601,11 @@
       reader.readAsDataURL(file);
     });
 
+    // 桌面端默认展开设置
+    if (window.innerWidth > 900) {
+      settingsPanel.classList.remove("collapsed");
+    }
+
     function handleFiles(e) {
       const files = Array.from(e.target.files || []);
       if (!files.length) return;
@@ -554,7 +638,7 @@
       });
     }
 
-    /* ----------- 解析 JSON：主线 + 模型 ----------- */
+    /* ----------- 解析 JSON：只取主线 + 模型 ----------- */
     function parseFromJsonExport(json, filename) {
       const convs = [];
       let arr = [];
@@ -724,7 +808,7 @@
     function parseFromTextTranscript(text, filename) {
       const messages = [];
       const re =
-        /【(user|assistant)】\s*\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s*([\s\S]*?)(?=\n【(?:user|assistant)】\s*\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]|$)/g;
+        /【(user|assistant)】\s*\[(\d{4}-\d2-\d2 \d{2}:\d{2}:\d{2})\]\s*([\s\S]*?)(?=\n【(?:user|assistant)】\s*\[\d{4}-\d2-\d2 \d{2}:\d{2}:\d{2}\]|$)/g;
 
       let match;
       while ((match = re.exec(text)) !== null) {
@@ -785,6 +869,10 @@
           state.activeId = conv.id;
           renderConversationList();
           renderActiveConversation();
+          // 在手机上选完会话自动收起侧栏
+          if (window.innerWidth <= 900) {
+            closeSidebar();
+          }
         });
 
         conversationListEl.appendChild(item);
@@ -804,7 +892,7 @@
       if (!conv) {
         chatTitleEl.textContent = "还没有打开会话";
         chatSubtitleEl.textContent =
-          "左侧导入并选择一个会话，或者上面点“导入聊天”，就能开始回顾聊天啦。";
+          "导入聊天文件并在左侧选择一个会话，就能开始回顾聊天啦。";
         chatBodyEl.innerHTML = `
           <div class="chat-empty">
             <div class="chat-empty-emoji">₍ᐢ. ̫ .ᐢ₎</div>
