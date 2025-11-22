@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
+  <!-- iOS / 手机适配：关键一句 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ChatGPT 聊天查看器</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
@@ -365,13 +367,20 @@
       border-radius: 999px;
     }
 
+    /* 窄屏（iPhone）优化 */
     @media (max-width: 900px) {
       .app {
         margin: 0;
         border-radius: 0;
+        width: 100%;
         height: 100vh;
       }
-      .sidebar { display: none; }
+      .sidebar {
+        display: none; /* 小屏默认只看聊天区，气泡更大 */
+      }
+      .bubble {
+        font-size: 15px;
+      }
     }
   </style>
 </head>
@@ -560,9 +569,8 @@
 
         if (conv.mapping) {
           const mapping = conv.mapping;
-          // 如果有 current_node：从 current_node 一路向上走父节点，只取这一条主线
           if (conv.current_node && mapping[conv.current_node]) {
-            const pathNodes = buildMainPath(mapping, conv.current_node); // 已按时间顺序
+            const pathNodes = buildMainPath(mapping, conv.current_node);
             pathNodes.forEach((node) => {
               const msg = node.message;
               if (!msg) return;
@@ -595,7 +603,6 @@
               });
             });
           } else {
-            // 没有 current_node，就退回到“全部节点按时间排”的老逻辑
             const temp = [];
             Object.values(mapping).forEach((node) => {
               if (!node || !node.message) return;
@@ -693,7 +700,6 @@
       return convs;
     }
 
-    // 从 current_node 一路向上追 parent，最后反转，得到一条主线
     function buildMainPath(mapping, currentId) {
       const path = [];
       const seen = new Set();
@@ -708,7 +714,6 @@
       return path.reverse();
     }
 
-    // 可能的模型字段来源：metadata.model / metadata.model_slug / model / model_slug
     function detectModel(msg) {
       const md = msg.metadata || {};
       return (
@@ -720,7 +725,6 @@
       );
     }
 
-    // 文本转录格式： 【user】[2025-06-29 05:35:19] 内容……
     function parseFromTextTranscript(text, filename) {
       const messages = [];
       const re =
@@ -762,7 +766,6 @@
       return `${y}-${m}-${day} ${h}:${mi}:${s}`;
     }
 
-    /* ----------- 渲染 ----------- */
     function renderConversationList() {
       conversationListEl.innerHTML = "";
       if (!state.conversations.length) return;
