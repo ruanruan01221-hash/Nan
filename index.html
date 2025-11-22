@@ -48,7 +48,7 @@
       position: relative;
     }
 
-    /* 侧栏和遮罩 */
+    /* 侧栏 & 遮罩 */
     .sidebar {
       width: var(--sidebar-width);
       border-right: 1px solid var(--border-soft);
@@ -74,18 +74,8 @@
 
     .sidebar-header-title span.emoji { font-size: 20px; }
 
-    .file-input-row {
-      margin-top: 10px;
-      font-size: 12px;
-      color: var(--text-sub);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .file-input-row input[type="file"] { font-size: 12px; }
-
-    .hint {
+    .sidebar-sub {
+      margin-top: 8px;
       font-size: 11px;
       color: #b38aa0;
       line-height: 1.4;
@@ -407,7 +397,6 @@
       border-radius: 999px;
     }
 
-    /* 手机适配：侧栏变滑出式 */
     @media (max-width: 900px) {
       .app {
         margin: 0;
@@ -444,15 +433,8 @@
           <span class="emoji">🍓</span>
           <span>ChatGPT 聊天列表</span>
         </div>
-        <div class="file-input-row">
-          <label>
-            导入聊天文件（支持多个）：
-            <input id="fileInput" type="file" multiple accept=".json,.txt" />
-          </label>
-          <div class="hint">
-            · 优先按 JSON 解析 ChatGPT 导出文件，<br />
-            · 如果不是标准 JSON，会按类似 <code>【user】[时间]</code> 的文本格式解析。
-          </div>
+        <div class="sidebar-sub">
+          请在右上角 <b>⚙ → 导入聊天</b> 选择导出的 JSON / 文本文件，这里只用来选择会话窗口。
         </div>
       </div>
       <div id="conversationList" class="conversation-list"></div>
@@ -503,7 +485,7 @@
       <div id="chatBody" class="chat-body">
         <div class="chat-empty">
           <div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ა</div>
-          <div>把 ChatGPT 导出的聊天 JSON / 文本拖进来或点右上角“⚙→导入聊天”，<br>左边选窗口，右边就会出现完整聊天记录哦。</div>
+          <div>点右上角「⚙ → 导入聊天」，<br>左边选窗口，右边就会出现完整聊天记录哦。</div>
         </div>
       </div>
 
@@ -527,8 +509,9 @@
     const sidebar = document.getElementById("sidebar");
     const sidebarBackdrop = document.getElementById("sidebarBackdrop");
     const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
+    const toggleSettingsBtn = document.getElementById("toggleSettingsBtn");
+    const settingsPanel = document.getElementById("settingsPanel");
 
-    const fileInputSidebar = document.getElementById("fileInput");
     const fileInputHeader = document.getElementById("fileInputHeader");
     const conversationListEl = document.getElementById("conversationList");
     const chatBodyEl = document.getElementById("chatBody");
@@ -540,9 +523,6 @@
     const userAvatarFileInput = document.getElementById("userAvatarFile");
     const assistantAvatarFileInput = document.getElementById("assistantAvatarFile");
 
-    const settingsPanel = document.getElementById("settingsPanel");
-    const toggleSettingsBtn = document.getElementById("toggleSettingsBtn");
-
     function openSidebar() {
       sidebar.classList.add("open");
       sidebarBackdrop.classList.add("active");
@@ -551,6 +531,7 @@
       sidebar.classList.remove("open");
       sidebarBackdrop.classList.remove("active");
     }
+
     toggleSidebarBtn.addEventListener("click", () => {
       if (sidebar.classList.contains("open")) closeSidebar();
       else openSidebar();
@@ -561,7 +542,11 @@
       settingsPanel.classList.toggle("collapsed");
     });
 
-    if (fileInputSidebar) fileInputSidebar.addEventListener("change", handleFiles, false);
+    // 桌面端默认展开设置
+    if (window.innerWidth > 900) {
+      settingsPanel.classList.remove("collapsed");
+    }
+
     if (fileInputHeader) fileInputHeader.addEventListener("change", handleFiles, false);
 
     bgColorInput.addEventListener("input", (e) => {
@@ -601,11 +586,6 @@
       reader.readAsDataURL(file);
     });
 
-    // 桌面端默认展开设置
-    if (window.innerWidth > 900) {
-      settingsPanel.classList.remove("collapsed");
-    }
-
     function handleFiles(e) {
       const files = Array.from(e.target.files || []);
       if (!files.length) return;
@@ -618,7 +598,7 @@
           try {
             const json = JSON.parse(text);
             convs = parseFromJsonExport(json, file.name);
-          } catch (err) {
+          } catch (_) {
             convs = [parseFromTextTranscript(text, file.name)];
           }
 
@@ -638,7 +618,7 @@
       });
     }
 
-    /* ----------- 解析 JSON：只取主线 + 模型 ----------- */
+    /* ----------- JSON 主线解析 ----------- */
     function parseFromJsonExport(json, filename) {
       const convs = [];
       let arr = [];
@@ -707,13 +687,7 @@
               const timestamp = rawTime ? formatTimestampFromSeconds(rawTime) : "";
               const model = detectModel(msg);
 
-              temp.push({
-                role,
-                timestamp,
-                content: trimmed,
-                model,
-                _rawTime: rawTime
-              });
+              temp.push({ role, timestamp, content: trimmed, model, _rawTime: rawTime });
             });
 
             temp.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
@@ -748,13 +722,7 @@
               : "";
             const model = detectModel(m);
 
-            temp.push({
-              role,
-              timestamp,
-              content: trimmed,
-              model,
-              _rawTime: rawTime
-            });
+            temp.push({ role, timestamp, content: trimmed, model, _rawTime: rawTime });
           });
 
           temp.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
@@ -805,10 +773,11 @@
       );
     }
 
+    /* 文本转录格式解析： 【user】[YYYY-MM-DD HH:MM:SS] 内容… */
     function parseFromTextTranscript(text, filename) {
       const messages = [];
       const re =
-        /【(user|assistant)】\s*\[(\d{4}-\d2-\d2 \d{2}:\d{2}:\d{2})\]\s*([\s\S]*?)(?=\n【(?:user|assistant)】\s*\[\d{4}-\d2-\d2 \d{2}:\d{2}:\d{2}\]|$)/g;
+        /【(user|assistant)】\s*\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s*([\s\S]*?)(?=\n【(?:user|assistant)】\s*\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]|$)/g;
 
       let match;
       while ((match = re.exec(text)) !== null) {
@@ -869,10 +838,7 @@
           state.activeId = conv.id;
           renderConversationList();
           renderActiveConversation();
-          // 在手机上选完会话自动收起侧栏
-          if (window.innerWidth <= 900) {
-            closeSidebar();
-          }
+          if (window.innerWidth <= 900) closeSidebar();
         });
 
         conversationListEl.appendChild(item);
@@ -935,7 +901,7 @@
         contentDiv.className = "markdown-body";
         try {
           contentDiv.innerHTML = marked.parse(msg.content);
-        } catch (e) {
+        } catch {
           contentDiv.textContent = msg.content;
         }
 
