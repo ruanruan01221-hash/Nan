@@ -48,7 +48,7 @@
       position: relative;
     }
 
-    /* 侧栏 & 遮罩 */
+    /* 侧边栏 */
     .sidebar {
       width: var(--sidebar-width);
       border-right: 1px solid var(--border-soft);
@@ -130,15 +130,6 @@
       font-size: 10px;
       color: #b05787;
     }
-
-    .sidebar-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.15);
-      z-index: 5;
-      display: none;
-    }
-    .sidebar-backdrop.active { display: block; }
 
     /* 主区域 */
     .main {
@@ -397,6 +388,7 @@
       border-radius: 999px;
     }
 
+    /* 手机适配：侧栏滑出 */
     @media (max-width: 900px) {
       .app {
         margin: 0;
@@ -423,8 +415,6 @@
   </style>
 </head>
 <body>
-  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-
   <div class="app">
     <!-- 左侧导航 -->
     <aside class="sidebar" id="sidebar">
@@ -484,7 +474,7 @@
 
       <div id="chatBody" class="chat-body">
         <div class="chat-empty">
-          <div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ა</div>
+          <div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ா</div>
           <div>点右上角「⚙ → 导入聊天」，<br>左边选窗口，右边就会出现完整聊天记录哦。</div>
         </div>
       </div>
@@ -507,7 +497,6 @@
     marked.setOptions({ breaks: true, gfm: true });
 
     const sidebar = document.getElementById("sidebar");
-    const sidebarBackdrop = document.getElementById("sidebarBackdrop");
     const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
     const toggleSettingsBtn = document.getElementById("toggleSettingsBtn");
     const settingsPanel = document.getElementById("settingsPanel");
@@ -523,30 +512,22 @@
     const userAvatarFileInput = document.getElementById("userAvatarFile");
     const assistantAvatarFileInput = document.getElementById("assistantAvatarFile");
 
-    function openSidebar() {
-      sidebar.classList.add("open");
-      sidebarBackdrop.classList.add("active");
+    // 侧栏开关
+    function toggleSidebar() {
+      if (window.innerWidth > 900) return; // 桌面端一直展示
+      sidebar.classList.toggle("open");
     }
-    function closeSidebar() {
-      sidebar.classList.remove("open");
-      sidebarBackdrop.classList.remove("active");
-    }
+    toggleSidebarBtn.addEventListener("click", toggleSidebar);
 
-    toggleSidebarBtn.addEventListener("click", () => {
-      if (sidebar.classList.contains("open")) closeSidebar();
-      else openSidebar();
-    });
-    sidebarBackdrop.addEventListener("click", closeSidebar);
-
+    // 设置面板开关
     toggleSettingsBtn.addEventListener("click", () => {
       settingsPanel.classList.toggle("collapsed");
     });
-
-    // 桌面端默认展开设置
     if (window.innerWidth > 900) {
       settingsPanel.classList.remove("collapsed");
     }
 
+    // 输入事件
     if (fileInputHeader) fileInputHeader.addEventListener("change", handleFiles, false);
 
     bgColorInput.addEventListener("input", (e) => {
@@ -618,7 +599,7 @@
       });
     }
 
-    /* ----------- JSON 主线解析 ----------- */
+    /* ---- JSON 主线解析 ---- */
     function parseFromJsonExport(json, filename) {
       const convs = [];
       let arr = [];
@@ -838,7 +819,7 @@
           state.activeId = conv.id;
           renderConversationList();
           renderActiveConversation();
-          if (window.innerWidth <= 900) closeSidebar();
+          if (window.innerWidth <= 900) sidebar.classList.remove("open");
         });
 
         conversationListEl.appendChild(item);
