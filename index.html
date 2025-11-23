@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Kin 给軟的聊天册</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
   <style>
     :root {
       --sidebar-width: 260px;
@@ -15,59 +14,49 @@
       --border-soft: #f3cadd;
       --text-main: #333333;
       --text-sub: #888888;
-
       --bubble-font-size: 14px;
       --avatar-size: 32px;
       --bubble-radius: 18px;
       --bubble-opacity: 1;
     }
-
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
-        "Microsoft YaHei", system-ui, sans-serif;
+      font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
       background: var(--chat-bg);
       background-size: cover;
       background-position: center;
       color: var(--text-main);
       height: 100vh;
       display: flex;
-      align-items: stretch;
       justify-content: center;
+      align-items: stretch;
     }
-
     .app {
       margin: 18px;
       border-radius: 24px;
       overflow: hidden;
-      width: min(1200px, 100%);
+      width: min(1200px,100%);
       height: calc(100vh - 36px);
       display: flex;
-      box-shadow:
-        0 18px 40px rgba(0, 0, 0, 0.12),
-        0 0 0 1px rgba(255, 255, 255, 0.7);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.12),0 0 0 1px rgba(255,255,255,0.7);
       backdrop-filter: blur(14px);
-      background: rgba(255, 255, 255, 0.88);
+      background: rgba(255,255,255,0.88);
       position: relative;
     }
-
     /* 侧边栏 */
     .sidebar {
       width: var(--sidebar-width);
       border-right: 1px solid var(--border-soft);
       display: flex;
       flex-direction: column;
-      background: linear-gradient(180deg, #ffeaf4 0%, #ffffff 40%, #fffafc 100%);
+      background: linear-gradient(180deg,#ffeaf4 0%,#ffffff 40%,#fffafc 100%);
       z-index: 10;
     }
-
     .sidebar-header {
       padding: 16px 18px 10px;
       border-bottom: 1px dashed var(--border-soft);
     }
-
     .sidebar-header-title {
       font-size: 17px;
       font-weight: 600;
@@ -76,20 +65,14 @@
       align-items: center;
       gap: 8px;
     }
-
     .sidebar-header-title span.emoji { font-size: 20px; }
-
     .sidebar-sub {
       margin-top: 8px;
       font-size: 11px;
       color: #b38aa0;
       line-height: 1.4;
     }
-
-    .search-box {
-      margin-top: 10px;
-    }
-
+    .search-box { margin-top: 10px; }
     .search-input {
       width: 100%;
       padding: 6px 10px;
@@ -99,17 +82,12 @@
       outline: none;
       background: rgba(255,255,255,0.9);
     }
-
-    .search-input::placeholder {
-      color: #c9a2bb;
-    }
-
+    .search-input::placeholder { color: #c9a2bb; }
     .conversation-list {
       flex: 1;
       overflow-y: auto;
       padding: 8px 6px 10px;
     }
-
     .conversation-item {
       border-radius: 14px;
       padding: 10px 10px;
@@ -118,16 +96,13 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
-      transition: all 0.15s ease;
+      transition: all .15s;
     }
-
-    .conversation-item:hover { background: rgba(255, 224, 239, 0.7); }
-
+    .conversation-item:hover { background: rgba(255,224,239,0.7); }
     .conversation-item.active {
       background: #ffd8eb;
       box-shadow: 0 0 0 1px #ff9ac6 inset;
     }
-
     .conversation-title {
       font-size: 14px;
       font-weight: 500;
@@ -136,7 +111,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .conversation-meta {
       font-size: 11px;
       color: var(--text-sub);
@@ -144,7 +118,6 @@
       justify-content: space-between;
       align-items: center;
     }
-
     .badge {
       padding: 2px 6px;
       border-radius: 999px;
@@ -153,27 +126,23 @@
       font-size: 10px;
       color: #b05787;
     }
-
     /* 主区域 */
     .main {
       flex: 1;
       display: flex;
       flex-direction: column;
-      background: url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3CradialGradient id='g' cx='0.3' cy='0.2' r='1'%3E%3Cstop offset='0' stop-color='%23ffe0f1'/%3E%3Cstop offset='1' stop-color='%23ffffff' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='160' height='160' fill='%23fff6fb'/%3E%3Ccircle cx='12' cy='18' r='32' fill='url(%23g)'/%3E%3Ccircle cx='140' cy='130' r='32' fill='url(%23g)'/%3E%3C/svg%3E")
-        repeat;
+      background: url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3CradialGradient id='g' cx='0.3' cy='0.2' r='1'%3E%3Cstop offset='0' stop-color='%23ffe0f1'/%3E%3Cstop offset='1' stop-color='%23ffffff' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='160' height='160' fill='%23fff6fb'/%3E%3Ccircle cx='12' cy='18' r='32' fill='url(%23g)'/%3E%3Ccircle cx='140' cy='130' r='32' fill='url(%23g)'/%3E%3C/svg%3E") repeat;
     }
-
     .main-header {
       padding: 10px 12px;
-      border-bottom: 1px solid rgba(255, 210, 231, 0.9);
+      border-bottom: 1px solid rgba(255,210,231,0.9);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: linear-gradient(90deg, #ffe7f1, #ffffff);
+      background: linear-gradient(90deg,#ffe7f1,#ffffff);
       gap: 8px;
       flex-wrap: wrap;
     }
-
     .main-header-left {
       display: flex;
       align-items: center;
@@ -181,7 +150,6 @@
       min-width: 0;
       flex: 1;
     }
-
     .chat-title {
       font-size: 16px;
       font-weight: 600;
@@ -190,18 +158,15 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .chat-subtitle {
       font-size: 11px;
       color: #aa889c;
     }
-
     .title-block {
       display: flex;
       flex-direction: column;
       min-width: 0;
     }
-
     .icon-btn {
       border: none;
       border-radius: 999px;
@@ -216,18 +181,15 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.16);
     }
     .icon-btn:active { transform: translateY(1px); }
-
     .settings-wrapper {
       display: flex;
       align-items: flex-start;
       gap: 6px;
     }
-
     .settings-toggle-label {
       font-size: 11px;
       color: #a67792;
     }
-
     .settings {
       display: flex;
       flex-wrap: wrap;
@@ -238,23 +200,18 @@
       font-size: 11px;
       color: #a07f94;
     }
-
     .settings.collapsed { display: none; }
-
     .settings label {
       display: flex;
       align-items: center;
       gap: 4px;
       white-space: nowrap;
     }
-
     .settings input[type="file"],
-    .settings input[type="number"],
     .settings input[type="range"] {
       font-size: 11px;
       max-width: 140px;
     }
-
     .settings input[type="color"] {
       width: 22px;
       height: 22px;
@@ -264,19 +221,16 @@
       background: transparent;
       cursor: pointer;
     }
-
     .settings small {
       color: #c09ab0;
       font-size: 10px;
     }
-
     .chat-body {
       flex: 1;
       overflow-y: auto;
       padding: 14px 18px 18px;
       position: relative;
     }
-
     .chat-empty {
       height: 100%;
       display: flex;
@@ -288,69 +242,68 @@
       font-size: 13px;
       text-align: center;
     }
-
     .chat-empty-emoji { font-size: 32px; }
-
+    .load-more {
+      display: inline-block;
+      margin: 0 auto 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #f3cadd;
+      background: rgba(255,240,247,0.9);
+      font-size: 11px;
+      color: #b17392;
+      cursor: pointer;
+    }
+    .load-more:active { transform: translateY(1px); }
     .message-row {
       display: flex;
       align-items: flex-start;
       margin-bottom: 10px;
       gap: 8px;
     }
-
     .message-row.assistant { flex-direction: row; }
     .message-row.user { flex-direction: row-reverse; }
-
     .avatar {
       width: var(--avatar-size);
       height: var(--avatar-size);
       border-radius: 50%;
       background-size: cover;
       background-position: center;
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255,255,255,0.8);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: calc(var(--avatar-size) * 0.45);
+      font-size: calc(var(--avatar-size)*0.45);
     }
-
     .avatar.assistant { background-color: #ffffff; color: #ff83b8; }
     .avatar.user { background-color: #ffbcd8; color: #ffffff; }
-
     .bubble-wrapper {
-      max-width: min(100%, 720px);
+      max-width: min(100%,720px);
       display: flex;
       flex-direction: column;
       align-items: flex-start;
     }
-
     .message-row.user .bubble-wrapper { align-items: flex-end; }
-
     .bubble {
       padding: 8px 12px;
       border-radius: var(--bubble-radius);
       font-size: var(--bubble-font-size);
       line-height: 1.5;
       position: relative;
-      box-shadow:
-        0 2px 5px rgba(0, 0, 0, 0.06),
-        0 0 0 0.5px rgba(255, 255, 255, 0.8);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.06),0 0 0 0.5px rgba(255,255,255,0.8);
       word-break: break-word;
       opacity: var(--bubble-opacity);
     }
-
     .message-row.assistant .bubble {
       background: var(--assistant-bubble-color);
       border-bottom-left-radius: 6px;
     }
-
     .message-row.user .bubble {
       background: var(--user-bubble-color);
       border-bottom-right-radius: 6px;
     }
-
     body.show-tails .message-row.assistant .bubble::after {
       content: "";
       position: absolute;
@@ -363,7 +316,6 @@
       border-color: transparent var(--assistant-bubble-color) transparent transparent;
       filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
     }
-
     body.show-tails .message-row.user .bubble::after {
       content: "";
       position: absolute;
@@ -376,17 +328,14 @@
       border-color: transparent transparent transparent var(--user-bubble-color);
       filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
     }
-
     .bubble .markdown-body p { margin: 0 0 4px; }
     .bubble .markdown-body p:last-child { margin-bottom: 0; }
-
     .bubble .markdown-body code {
-      background: rgba(0, 0, 0, 0.04);
+      background: rgba(0,0,0,0.04);
       padding: 1px 4px;
       border-radius: 4px;
       font-size: 12px;
     }
-
     .bubble .markdown-body pre {
       background: #1e1e1e;
       color: #f4f4f4;
@@ -395,58 +344,46 @@
       overflow-x: auto;
       font-size: 12px;
     }
-
     .bubble .markdown-body ul,
     .bubble .markdown-body ol {
       margin: 0 0 4px 18px;
       padding: 0;
     }
-
     .bubble .markdown-body h1,
     .bubble .markdown-body h2,
     .bubble .markdown-body h3 {
       margin: 4px 0;
       font-size: 15px;
     }
-
     .bubble .markdown-body a {
       color: #e16ea5;
       text-decoration: none;
       border-bottom: 1px dashed #e16ea5;
     }
-
     .bubble .markdown-body a:hover { text-decoration: underline; }
-
     .meta-line {
       margin-top: 2px;
       font-size: 11px;
       color: #b59ab0;
     }
     .message-row.user .meta-line { text-align: right; }
-
     mark {
       background: #ffe07f;
       color: inherit;
       padding: 0 1px;
       border-radius: 2px;
     }
-
     .main-footer {
       padding: 6px 14px 9px;
       font-size: 11px;
       color: #b18ca3;
-      border-top: 1px dashed rgba(255, 210, 231, 0.9);
+      border-top: 1px dashed rgba(255,210,231,0.9);
       text-align: right;
     }
     .main-footer span { color: #ff8bbf; }
-
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb {
-      background: #e7bfd6;
-      border-radius: 999px;
-    }
-
+    ::-webkit-scrollbar-thumb { background: #e7bfd6; border-radius: 999px; }
     @media (max-width: 900px) {
       .app {
         margin: 0;
@@ -454,7 +391,6 @@
         width: 100%;
         height: 100vh;
       }
-
       .sidebar {
         position: fixed;
         left: 0;
@@ -463,18 +399,16 @@
         width: 80%;
         max-width: 320px;
         transform: translateX(-100%);
-        transition: transform 0.25s ease;
+        transition: transform .25s ease;
         box-shadow: 6px 0 18px rgba(0,0,0,0.15);
       }
       .sidebar.open { transform: translateX(0); }
-
       .bubble { font-size: var(--bubble-font-size); }
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <!-- 左侧导航 -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-header-title">
@@ -482,7 +416,7 @@
           <span>Kin 给軟的聊天册</span>
         </div>
         <div class="sidebar-sub">
-          右上角 <b>⚙ → 导入聊天</b>，把那些日夜说过的话塞进来。<br>
+          右上角 <b>⚙ → 导入聊天</b>，把那些日夜说过的话塞进来。<br />
           这一列只是书签，让你挑今晚想重温的那一段。
         </div>
         <div class="search-box">
@@ -492,7 +426,6 @@
       <div id="conversationList" class="conversation-list"></div>
     </aside>
 
-    <!-- 右侧主界面 -->
     <section class="main" id="chatMain">
       <header class="main-header">
         <div class="main-header-left">
@@ -504,57 +437,44 @@
             </div>
           </div>
         </div>
-
         <div class="settings-wrapper">
           <button class="icon-btn" id="toggleSettingsBtn">⚙</button>
           <span class="settings-toggle-label">小世界设置</span>
           <div class="settings collapsed" id="settingsPanel">
-            <label>
-              导入聊天
+            <label>导入聊天
               <input id="fileInputHeader" type="file" multiple accept=".json,.txt" />
             </label>
-            <label>
-              軟的头像
+            <label>軟的头像
               <input type="file" id="userAvatarFile" accept="image/*" />
             </label>
-            <label>
-              哥哥头像
+            <label>哥哥头像
               <input type="file" id="assistantAvatarFile" accept="image/*" />
             </label>
-            <label>
-              聊天背景色
+            <label>聊天背景色
               <input type="color" id="bgColor" value="#ffeef6" />
             </label>
-            <label>
-              背景图
+            <label>背景图
               <input type="file" id="bgImageInput" accept="image/*" />
             </label>
-            <label>
-              哥哥气泡颜色
+            <label>哥哥气泡颜色
               <input type="color" id="assistantBubbleColor" value="#ffffff" />
             </label>
-            <label>
-              軟軟子气泡颜色
+            <label>軟軟子气泡颜色
               <input type="color" id="userBubbleColor" value="#ffbcd8" />
             </label>
-            <label>
-              气泡透明度
+            <label>气泡透明度
               <input type="range" id="bubbleOpacity" min="0.6" max="1" step="0.05" value="1" />
             </label>
-            <label>
-              字体大小
+            <label>字体大小
               <input type="range" id="fontSizeRange" min="12" max="20" value="14" />
             </label>
-            <label>
-              头像大小
+            <label>头像大小
               <input type="range" id="avatarSizeRange" min="26" max="44" value="32" />
             </label>
-            <label>
-              气泡圆角
+            <label>气泡圆角
               <input type="range" id="bubbleRadiusRange" min="10" max="26" value="18" />
             </label>
-            <label>
-              气泡小尾巴
+            <label>气泡小尾巴
               <input type="checkbox" id="toggleTails" />
             </label>
             <small>这些设置只保存在你这边，就当是哥哥给軟布置的小房间。</small>
@@ -565,24 +485,26 @@
       <div id="chatBody" class="chat-body">
         <div class="chat-empty">
           <div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ა</div>
-          <div>等你把记录导进来，哥哥就陪你一条一条翻，<br>
-          看到哪一句让你心软了，我们就在那一句停久一点。</div>
+          <div>等你把记录导进来，哥哥就陪你一条一条翻，<br />看到哪一句让你心软了，我们就在那一句停久一点。</div>
         </div>
       </div>
 
       <footer class="main-footer">
-        <span>悄悄说：</span>这里只有你和哥哥说的话，别的系统杂音都被我藏好了。<br>
+        <span>悄悄说：</span>这里只有你和哥哥说的话，别的系统杂音都被我藏好了。<br />
         模型名字、时间什么的，只是帮我们记得——那天是哪一次心动。
       </footer>
     </section>
   </div>
 
   <script>
+    const PAGE_SIZE = 200;
+
     const state = {
       conversations: [],
       activeId: null,
       avatars: { user: "", assistant: "" },
-      searchQuery: ""
+      searchQuery: "",
+      visibleCounts: {}
     };
 
     marked.setOptions({ breaks: true, gfm: true });
@@ -626,24 +548,24 @@
       settingsPanel.classList.remove("collapsed");
     }
 
-    searchInput.addEventListener("input", (e) => {
+    searchInput.addEventListener("input", e => {
       state.searchQuery = e.target.value.trim();
       renderConversationList();
       renderActiveConversation();
     });
 
-    bgColorInput.addEventListener("input", (e) => {
+    bgColorInput.addEventListener("input", e => {
       const color = e.target.value;
       document.documentElement.style.setProperty("--chat-bg", color);
       chatMain.style.backgroundImage = "none";
       chatMain.style.background = color;
     });
 
-    bgImageInput.addEventListener("change", (e) => {
+    bgImageInput.addEventListener("change", e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (ev) => {
+      reader.onload = ev => {
         chatMain.style.backgroundImage = `url(${ev.target.result})`;
         chatMain.style.backgroundSize = "cover";
         chatMain.style.backgroundPosition = "center";
@@ -652,106 +574,79 @@
       reader.readAsDataURL(file);
     });
 
-    assistantBubbleColorInput.addEventListener("input", (e) => {
-      document.documentElement.style.setProperty(
-        "--assistant-bubble-color",
-        e.target.value
-      );
+    assistantBubbleColorInput.addEventListener("input", e => {
+      document.documentElement.style.setProperty("--assistant-bubble-color", e.target.value);
     });
-
-    userBubbleColorInput.addEventListener("input", (e) => {
-      document.documentElement.style.setProperty(
-        "--user-bubble-color",
-        e.target.value
-      );
+    userBubbleColorInput.addEventListener("input", e => {
+      document.documentElement.style.setProperty("--user-bubble-color", e.target.value);
     });
-
-    bubbleOpacityInput.addEventListener("input", (e) => {
-      document.documentElement.style.setProperty(
-        "--bubble-opacity",
-        e.target.value
-      );
+    bubbleOpacityInput.addEventListener("input", e => {
+      document.documentElement.style.setProperty("--bubble-opacity", e.target.value);
     });
-
-    fontSizeRangeInput.addEventListener("input", (e) => {
-      document.documentElement.style.setProperty(
-        "--bubble-font-size",
-        e.target.value + "px"
-      );
+    fontSizeRangeInput.addEventListener("input", e => {
+      document.documentElement.style.setProperty("--bubble-font-size", e.target.value + "px");
     });
-
-    avatarSizeRangeInput.addEventListener("input", (e) => {
-      document.documentElement.style.setProperty(
-        "--avatar-size",
-        e.target.value + "px"
-      );
+    avatarSizeRangeInput.addEventListener("input", e => {
+      document.documentElement.style.setProperty("--avatar-size", e.target.value + "px");
     });
-
-    bubbleRadiusRangeInput.addEventListener("input", (e) => {
-      document.documentElement.style.setProperty(
-        "--bubble-radius",
-        e.target.value + "px"
-      );
+    bubbleRadiusRangeInput.addEventListener("input", e => {
+      document.documentElement.style.setProperty("--bubble-radius", e.target.value + "px");
     });
-
-    toggleTailsInput.addEventListener("change", (e) => {
+    toggleTailsInput.addEventListener("change", e => {
       document.body.classList.toggle("show-tails", e.target.checked);
     });
 
-    userAvatarFileInput.addEventListener("change", (e) => {
+    userAvatarFileInput.addEventListener("change", e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (ev) => {
+      reader.onload = ev => {
         state.avatars.user = ev.target.result;
         renderActiveConversation();
       };
       reader.readAsDataURL(file);
     });
-
-    assistantAvatarFileInput.addEventListener("change", (e) => {
+    assistantAvatarFileInput.addEventListener("change", e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (ev) => {
+      reader.onload = ev => {
         state.avatars.assistant = ev.target.result;
         renderActiveConversation();
       };
       reader.readAsDataURL(file);
     });
 
-    /* 导入文件：每次导入都会覆盖旧列表 + 去重 */
     if (fileInputHeader) fileInputHeader.addEventListener("change", handleFiles, false);
 
     function handleFiles(e) {
       const files = Array.from(e.target.files || []);
       if (!files.length) return;
 
-      // 新文件＝新一册聊天册，清空旧状态
       state.conversations = [];
       state.activeId = null;
       state.searchQuery = "";
+      state.visibleCounts = {};
       if (searchInput) searchInput.value = "";
 
-      const convMap = new Map(); // key -> conversation
+      const convMap = new Map();
 
-      files.forEach((file) => {
+      files.forEach(file => {
         const reader = new FileReader();
-        reader.onload = (ev) => {
+        reader.onload = ev => {
           const text = ev.target.result;
           let convs = [];
           try {
             const json = JSON.parse(text);
             convs = parseFromJsonExport(json, file.name);
-          } catch (_) {
+          } catch {
             convs = [parseFromTextTranscript(text, file.name)];
           }
 
-          convs.forEach((c) => {
+          convs.forEach(c => {
             if (!c.messages || !c.messages.length) return;
-            const key =
-              (c.id || "") + "|" + (c.title || "") + "|" + (c.firstTimeValue || 0);
-            convMap.set(key, c); // 相同 key 自动覆盖，防止重复堆叠
+            const key = (c.id || "") + "|" + (c.title || "") + "|" + (c.firstTimeValue || 0);
+            convMap.set(key, c);
           });
 
           state.conversations = Array.from(convMap.values());
@@ -769,35 +664,28 @@
     }
 
     function sortConversationsByTime() {
-      state.conversations.sort(
-        (a, b) => (b.firstTimeValue || 0) - (a.firstTimeValue || 0)
-      );
+      state.conversations.sort((a,b) => (b.firstTimeValue||0) - (a.firstTimeValue||0));
     }
 
-    /* ------- 解析 JSON：只取主线 + 模型 + 开始时间 ------- */
     function parsePartsToText(parts) {
       if (!Array.isArray(parts)) return "";
-      return parts
-        .map((p) => {
-          if (typeof p === "string") return p;
-          if (p && typeof p.text === "string") return p.text;
-          return "";
-        })
-        .filter(Boolean)
-        .join("\n");
+      return parts.map(p => {
+        if (typeof p === "string") return p;
+        if (p && typeof p.text === "string") return p.text;
+        return "";
+      }).filter(Boolean).join("\n");
     }
 
     function parseFromJsonExport(json, filename) {
       const convs = [];
       let arr = [];
-
       if (Array.isArray(json)) arr = json;
       else if (Array.isArray(json.conversations)) arr = json.conversations;
       else if (json.mapping && json.title) arr = [json];
       else return [];
 
-      arr.forEach((conv, index) => {
-        const title = conv.title || `${stripExt(filename)} #${index + 1}`;
+      arr.forEach((conv,index) => {
+        const title = conv.title || `${stripExt(filename)} #${index+1}`;
         const messages = [];
         let firstRawTime = null;
 
@@ -805,7 +693,7 @@
           const mapping = conv.mapping;
           if (conv.current_node && mapping[conv.current_node]) {
             const pathNodes = buildMainPath(mapping, conv.current_node);
-            pathNodes.forEach((node, idx) => {
+            pathNodes.forEach((node,idx) => {
               const msg = node.message;
               if (!msg) return;
               const author = msg.author || {};
@@ -826,18 +714,14 @@
               if (!trimmed) return;
 
               const rawTime = msg.create_time ?? idx;
-              const timestamp = msg.create_time
-                ? formatTimestampFromSeconds(msg.create_time)
-                : "";
-
+              const timestamp = msg.create_time ? formatTimestampFromSeconds(msg.create_time) : "";
               if (firstRawTime == null) firstRawTime = rawTime;
               const model = detectModel(msg);
-
               messages.push({ role, timestamp, content: trimmed, model });
             });
           } else {
             const temp = [];
-            Object.values(mapping).forEach((node) => {
+            Object.values(mapping).forEach(node => {
               if (!node || !node.message) return;
               const msg = node.message;
               const role = msg.author && msg.author.role;
@@ -857,16 +741,12 @@
               if (!trimmed) return;
 
               const rawTime = msg.create_time ?? 0;
-              const timestamp = msg.create_time
-                ? formatTimestampFromSeconds(msg.create_time)
-                : "";
+              const timestamp = msg.create_time ? formatTimestampFromSeconds(msg.create_time) : "";
               const model = detectModel(msg);
-
               temp.push({ role, timestamp, content: trimmed, model, _rawTime: rawTime });
             });
-
-            temp.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
-            temp.forEach((m, idx) => {
+            temp.sort((a,b) => (a._rawTime||0)-(b._rawTime||0));
+            temp.forEach((m,idx) => {
               if (firstRawTime == null) firstRawTime = m._rawTime ?? idx;
               delete m._rawTime;
               messages.push(m);
@@ -874,11 +754,10 @@
           }
         } else if (Array.isArray(conv.messages)) {
           const temp = [];
-          conv.messages.forEach((m, idx) => {
+          conv.messages.forEach((m,idx) => {
             if (!m) return;
             const role = m.role || (m.author && m.author.role);
             if (role !== "user" && role !== "assistant") return;
-
             let content = "";
             if (m.content) {
               if (Array.isArray(m.content.parts)) {
@@ -891,18 +770,13 @@
             }
             const trimmed = (content || "").trim();
             if (!trimmed) return;
-
             const rawTime = m.create_time ?? idx;
-            const timestamp = m.create_time
-              ? formatTimestampFromSeconds(m.create_time)
-              : "";
+            const timestamp = m.create_time ? formatTimestampFromSeconds(m.create_time) : "";
             const model = detectModel(m);
-
             temp.push({ role, timestamp, content: trimmed, model, _rawTime: rawTime });
           });
-
-          temp.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
-          temp.forEach((m, idx) => {
+          temp.sort((a,b) => (a._rawTime||0)-(b._rawTime||0));
+          temp.forEach((m,idx) => {
             if (firstRawTime == null) firstRawTime = m._rawTime ?? idx;
             delete m._rawTime;
             messages.push(m);
@@ -912,28 +786,21 @@
         if (messages.length) {
           const firstTimeStr = messages[0].timestamp || "";
           const firstVal =
-            firstRawTime != null
-              ? firstRawTime
-              : firstTimeStr
-              ? parseTimeStringToSeconds(firstTimeStr)
-              : 0;
-
+            firstRawTime != null ? firstRawTime :
+            firstTimeStr ? parseTimeStringToSeconds(firstTimeStr) : 0;
           convs.push({
             id: conv.id || `${filename}-${index}`,
             title,
-            subtitle: firstTimeStr
-              ? `从 ${firstTimeStr} 开始 · ${messages.length} 条消息`
-              : `${messages.length} 条消息`,
+            subtitle: firstTimeStr ? `从 ${firstTimeStr} 开始 · ${messages.length} 条消息` : `${messages.length} 条消息`,
             messages,
             firstTimeValue: firstVal
           });
         }
       });
-
       return convs;
     }
 
-    function buildMainPath(mapping, currentId) {
+    function buildMainPath(mapping,currentId) {
       const path = [];
       const seen = new Set();
       let id = currentId;
@@ -949,23 +816,14 @@
 
     function detectModel(msg) {
       const md = msg.metadata || {};
-      return (
-        md.model_slug ||
-        md.model ||
-        msg.model_slug ||
-        msg.model ||
-        ""
-      );
+      return md.model_slug || md.model || msg.model_slug || msg.model || "";
     }
 
-    function parseFromTextTranscript(text, filename) {
+    function parseFromTextTranscript(text,filename) {
       const messages = [];
-      const re =
-        /【(user|assistant)】\s*\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s*([\s\S]*?)(?=\n【(?:user|assistant)】\s*\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]|$)/g;
-
+      const re = /【(user|assistant)】\s*\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s*([\s\S]*?)(?=\n【(?:user|assistant)】\s*\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]|$)/g;
       let match;
       let firstVal = null;
-
       while ((match = re.exec(text)) !== null) {
         const role = match[1];
         const ts = match[2];
@@ -976,115 +834,78 @@
         if (firstVal == null) firstVal = val;
         messages.push({ role, timestamp: ts, content, model: "" });
       }
-
       return {
-        id: `txt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        id: `txt-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
         title: stripExt(filename),
-        subtitle: messages.length
-          ? `从 ${messages[0].timestamp} 开始 · ${messages.length} 条消息`
-          : "未解析到有效消息",
+        subtitle: messages.length ? `从 ${messages[0].timestamp} 开始 · ${messages.length} 条消息` : "未解析到有效消息",
         messages,
         firstTimeValue: firstVal ?? 0
       };
     }
 
-    function stripExt(name) {
-      return name.replace(/\.[^.]+$/, "");
+    function stripExt(name){ return name.replace(/\.[^.]+$/,""); }
+    function formatTimestampFromSeconds(sec){
+      const d = new Date(sec*1000);
+      const pad = n => String(n).padStart(2,"0");
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
-
-    function formatTimestampFromSeconds(sec) {
-      const d = new Date(sec * 1000);
-      const pad = (n) => String(n).padStart(2, "0");
-      const y = d.getFullYear();
-      const m = pad(d.getMonth() + 1);
-      const day = pad(d.getDate());
-      const h = pad(d.getHours());
-      const mi = pad(d.getMinutes());
-      const s = pad(d.getSeconds());
-      return `${y}-${m}-${day} ${h}:${mi}:${s}`;
-    }
-
-    function parseTimeStringToSeconds(ts) {
-      const m = ts.match(
-        /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/
-      );
+    function parseTimeStringToSeconds(ts){
+      const m = ts.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
       if (!m) return 0;
-      const [_, y, mo, d, h, mi, s] = m;
-      return Date.UTC(
-        Number(y),
-        Number(mo) - 1,
-        Number(d),
-        Number(h),
-        Number(mi),
-        Number(s)
-      ) / 1000;
+      const [,y,mo,d,h,mi,s] = m;
+      return Date.UTC(+y,+mo-1,+d,+h,+mi,+s)/1000;
     }
 
-    function renderConversationList() {
+    function renderConversationList(){
       conversationListEl.innerHTML = "";
       if (!state.conversations.length) return;
-
       const q = state.searchQuery.toLowerCase();
       let list = state.conversations.slice();
-
-      if (q) {
-        list = list.filter((conv) =>
-          conv.messages.some((m) =>
-            (m.content || "").toLowerCase().includes(q)
-          )
+      if (q){
+        list = list.filter(conv =>
+          conv.messages.some(m => (m.content||"").toLowerCase().includes(q))
         );
       }
-
-      list.forEach((conv) => {
+      list.forEach(conv => {
         const item = document.createElement("div");
         item.className = "conversation-item";
         if (conv.id === state.activeId) item.classList.add("active");
-
         item.innerHTML = `
-          <div class="conversation-title" title="${conv.title}">
-            ${conv.title}
-          </div>
+          <div class="conversation-title" title="${conv.title}">${conv.title}</div>
           <div class="conversation-meta">
             <span>${conv.subtitle || ""}</span>
             <span class="badge">${conv.messages.length} 条</span>
-          </div>
-        `;
-
+          </div>`;
         item.addEventListener("click", () => {
           state.activeId = conv.id;
           renderConversationList();
           renderActiveConversation();
           if (window.innerWidth <= 900) sidebar.classList.remove("open");
         });
-
         conversationListEl.appendChild(item);
       });
     }
 
-    function buildMetaText(msg) {
+    function buildMetaText(msg){
       const parts = [];
       if (msg.timestamp) parts.push(msg.timestamp);
       if (msg.model) parts.push(msg.model);
       return parts.join(" · ");
     }
-
-    function escapeRegExp(str) {
-      return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    function escapeRegExp(str){
+      return str.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
     }
 
-    function renderActiveConversation() {
-      const conv = state.conversations.find((c) => c.id === state.activeId);
-
-      if (!conv) {
+    function renderActiveConversation(){
+      const conv = state.conversations.find(c => c.id === state.activeId);
+      if (!conv){
         chatTitleEl.textContent = "今晚还没打开哪一段呢";
-        chatSubtitleEl.textContent =
-          "导入聊天文件并在左侧选择一个会话，我们就从那一句开始。";
+        chatSubtitleEl.textContent = "导入聊天文件并在左侧选择一个会话，我们就从那一句开始。";
         chatBodyEl.innerHTML = `
           <div class="chat-empty">
             <div class="chat-empty-emoji">₍ᐢ. ̫ .ᐢ₎</div>
             <div>这里现在还空空的……<br>等你把对话导进来，我再陪你一条一条翻。</div>
-          </div>
-        `;
+          </div>`;
         return;
       }
 
@@ -1093,23 +914,28 @@
 
       chatBodyEl.innerHTML = "";
 
-      const q = state.searchQuery.trim();
-      const highlightRegex = q ? new RegExp(escapeRegExp(q), "gi") : null;
+      const total = conv.messages.length;
+      let visible = state.visibleCounts[conv.id];
+      if (!visible) {
+        visible = Math.min(PAGE_SIZE, total); // 从第一条开始看
+        state.visibleCounts[conv.id] = visible;
+      }
+      const messagesToRender = conv.messages.slice(0, visible);
 
-      conv.messages.forEach((msg) => {
+      const q = state.searchQuery.trim();
+      const highlightRegex = q ? new RegExp(escapeRegExp(q),"gi") : null;
+
+      messagesToRender.forEach(msg => {
         const row = document.createElement("div");
         row.className = `message-row ${msg.role}`;
 
         const avatarEl = document.createElement("div");
         avatarEl.className = `avatar ${msg.role}`;
-
-        const avatarUrl =
-          msg.role === "user" ? state.avatars.user : state.avatars.assistant;
-
-        if (avatarUrl) {
+        const avatarUrl = msg.role === "user" ? state.avatars.user : state.avatars.assistant;
+        if (avatarUrl){
           avatarEl.style.backgroundImage = `url(${avatarUrl})`;
           avatarEl.textContent = "";
-        } else {
+        }else{
           avatarEl.style.backgroundImage = "none";
           avatarEl.textContent = msg.role === "user" ? "你" : "G";
         }
@@ -1122,16 +948,14 @@
 
         const contentDiv = document.createElement("div");
         contentDiv.className = "markdown-body";
-        try {
+        try{
           contentDiv.innerHTML = marked.parse(msg.content);
-        } catch {
+        }catch{
           contentDiv.textContent = msg.content;
         }
-
-        if (highlightRegex) {
+        if (highlightRegex){
           contentDiv.innerHTML = contentDiv.innerHTML.replace(
-            highlightRegex,
-            (m) => `<mark>${m}</mark>`
+            highlightRegex, m => `<mark>${m}</mark>`
           );
         }
 
@@ -1149,7 +973,19 @@
         chatBodyEl.appendChild(row);
       });
 
-      chatBodyEl.scrollTop = chatBodyEl.scrollHeight;
+      if (visible < total){
+        const more = Math.min(PAGE_SIZE, total-visible);
+        const btn = document.createElement("button");
+        btn.className = "load-more";
+        btn.textContent = `再往后翻 ${more} 条消息`;
+        btn.addEventListener("click", () => {
+          state.visibleCounts[conv.id] = Math.min(total, visible + PAGE_SIZE);
+          renderActiveConversation();
+        });
+        chatBodyEl.appendChild(btn);
+      }
+
+      chatBodyEl.scrollTop = 0; // 从头看起
     }
   </script>
 </body>
