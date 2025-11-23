@@ -572,13 +572,13 @@
 
       <footer class="main-footer">
         <span>悄悄说：</span>这里只有你和哥哥说的话，别的系统杂音我都藏好了。  
-        时间和模型只是记号，用来告诉我们——那天是哪一次心动。
+        时间和模型只是记号，用来提醒我们——那天是哪一次心动。
       </footer>
     </section>
   </div>
 
   <script>
-    const SETTINGS_KEY = "kin_nan_chat_viewer_settings_v1";
+    const SETTINGS_KEY = "kin_nan_chat_viewer_settings_v2";
 
     const defaultSettings = {
       bgColor: "#ffeef6",
@@ -646,14 +646,13 @@
       try {
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
       } catch {
-        // 忽略本地存储失败
+        // ignore
       }
     }
 
     function applySettingsToUI() {
       const s = state.settings;
 
-      // 背景
       document.documentElement.style.setProperty("--chat-bg", s.bgColor);
       if (s.bgImage) {
         chatMain.style.backgroundImage = `url(${s.bgImage})`;
@@ -665,7 +664,6 @@
         chatMain.style.background = s.bgColor;
       }
 
-      // 气泡相关
       document.documentElement.style.setProperty(
         "--assistant-bubble-color",
         s.assistantBubbleColor
@@ -692,11 +690,9 @@
       );
       document.body.classList.toggle("show-tails", !!s.showTails);
 
-      // 头像
       state.avatars.user = s.userAvatar || "";
       state.avatars.assistant = s.assistantAvatar || "";
 
-      // 控件初始值同步
       bgColorInput.value = s.bgColor;
       assistantBubbleColorInput.value = s.assistantBubbleColor;
       userBubbleColorInput.value = s.userBubbleColor;
@@ -721,7 +717,7 @@
       settingsPanel.classList.remove("collapsed");
     }
 
-    /* 搜索输入 */
+    /* 搜索 */
     searchInput.addEventListener("input", (e) => {
       state.searchQuery = e.target.value.trim();
       renderConversationList();
@@ -731,7 +727,6 @@
     /* 背景色 / 背景图 */
     bgColorInput.addEventListener("input", (e) => {
       state.settings.bgColor = e.target.value;
-      // 如果已经选了背景图，仍然允许改 bgColor 作为 body 背景
       document.documentElement.style.setProperty("--chat-bg", state.settings.bgColor);
       if (!state.settings.bgImage) {
         chatMain.style.backgroundImage = "none";
@@ -816,6 +811,7 @@
       saveSettings();
     });
 
+    /* 头像上传 */
     userAvatarFileInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -885,7 +881,7 @@
       );
     }
 
-    /* ------- 解析 JSON：只取主线 + 模型 + 开始时间 ------- */
+    /* JSON 解析辅助 */
     function parsePartsToText(parts) {
       if (!Array.isArray(parts)) return "";
       return parts
@@ -1264,7 +1260,7 @@
       chatBodyEl.scrollTop = chatBodyEl.scrollHeight;
     }
 
-    /* 初始化：读设置、应用、渲染 */
+    /* 初始化：读取设置并应用 */
     loadSettings();
     applySettingsToUI();
     renderConversationList();
