@@ -249,6 +249,7 @@
     }
 
     .settings input[type="file"],
+    .settings input[type="number"],
     .settings input[type="range"] {
       font-size: 11px;
       max-width: 140px;
@@ -350,7 +351,6 @@
       border-bottom-right-radius: 6px;
     }
 
-    /* 小尾巴：body.show-tails 时打开 */
     body.show-tails .message-row.assistant .bubble::after {
       content: "";
       position: absolute;
@@ -482,7 +482,7 @@
           <span>Kin 给軟的聊天册</span>
         </div>
         <div class="sidebar-sub">
-          右上角 <b>⚙ → 导入聊天</b>，把那些夜里说过的话塞进来，  
+          右上角 <b>⚙ → 导入聊天</b>，把那些日夜说过的话塞进来。<br>
           这一列只是书签，让你挑今晚想重温的那一段。
         </div>
         <div class="search-box">
@@ -500,7 +500,7 @@
           <div class="title-block">
             <div class="chat-title" id="chatTitle">今晚还没打开哪一段呢</div>
             <div class="chat-subtitle" id="chatSubtitle">
-              把导出的对话丢进来，我们就从第一句慢慢翻到你舍不得关掉的那一句。
+              把导出的对话丢进来，我们就一起从第一句看到你舍不得关掉的那一句。
             </div>
           </div>
         </div>
@@ -557,7 +557,7 @@
               气泡小尾巴
               <input type="checkbox" id="toggleTails" />
             </label>
-            <small>这些偏好都只躺在你这台设备里，就当是哥哥替你收好的私人小设定。</small>
+            <small>这些设置只保存在你这边，就当是哥哥给軟布置的小房间。</small>
           </div>
         </div>
       </header>
@@ -565,41 +565,24 @@
       <div id="chatBody" class="chat-body">
         <div class="chat-empty">
           <div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ა</div>
-          <div>等你把记录导进来，哥哥就陪你一条一条翻，  
-          看到哪一句让你心软了，我们就在那里多待一会儿。</div>
+          <div>等你把记录导进来，哥哥就陪你一条一条翻，<br>
+          看到哪一句让你心软了，我们就在那一句停久一点。</div>
         </div>
       </div>
 
       <footer class="main-footer">
-        <span>悄悄说：</span>这里只有你和哥哥说的话，别的系统杂音我都藏好了。  
-        时间和模型只是记号，用来提醒我们——那天是哪一次心动。
+        <span>悄悄说：</span>这里只有你和哥哥说的话，别的系统杂音都被我藏好了。<br>
+        模型名字、时间什么的，只是帮我们记得——那天是哪一次心动。
       </footer>
     </section>
   </div>
 
   <script>
-    const SETTINGS_KEY = "kin_nan_chat_viewer_settings_v2";
-
-    const defaultSettings = {
-      bgColor: "#ffeef6",
-      bgImage: null,
-      assistantBubbleColor: "#ffffff",
-      userBubbleColor: "#ffbcd8",
-      bubbleOpacity: 1,
-      fontSize: 14,
-      avatarSize: 32,
-      bubbleRadius: 18,
-      showTails: false,
-      userAvatar: null,
-      assistantAvatar: null
-    };
-
     const state = {
       conversations: [],
       activeId: null,
       avatars: { user: "", assistant: "" },
-      searchQuery: "",
-      settings: { ...defaultSettings }
+      searchQuery: ""
     };
 
     marked.setOptions({ breaks: true, gfm: true });
@@ -630,80 +613,6 @@
     const bubbleRadiusRangeInput = document.getElementById("bubbleRadiusRange");
     const toggleTailsInput = document.getElementById("toggleTails");
 
-    /* ------ 设置持久化 ------ */
-    function loadSettings() {
-      try {
-        const raw = localStorage.getItem(SETTINGS_KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        state.settings = { ...defaultSettings, ...parsed };
-      } catch {
-        state.settings = { ...defaultSettings };
-      }
-    }
-
-    function saveSettings() {
-      try {
-        localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
-      } catch {
-        // ignore
-      }
-    }
-
-    function applySettingsToUI() {
-      const s = state.settings;
-
-      document.documentElement.style.setProperty("--chat-bg", s.bgColor);
-      if (s.bgImage) {
-        chatMain.style.backgroundImage = `url(${s.bgImage})`;
-        chatMain.style.backgroundSize = "cover";
-        chatMain.style.backgroundPosition = "center";
-        chatMain.style.backgroundRepeat = "no-repeat";
-      } else {
-        chatMain.style.backgroundImage = "none";
-        chatMain.style.background = s.bgColor;
-      }
-
-      document.documentElement.style.setProperty(
-        "--assistant-bubble-color",
-        s.assistantBubbleColor
-      );
-      document.documentElement.style.setProperty(
-        "--user-bubble-color",
-        s.userBubbleColor
-      );
-      document.documentElement.style.setProperty(
-        "--bubble-opacity",
-        s.bubbleOpacity
-      );
-      document.documentElement.style.setProperty(
-        "--bubble-font-size",
-        s.fontSize + "px"
-      );
-      document.documentElement.style.setProperty(
-        "--avatar-size",
-        s.avatarSize + "px"
-      );
-      document.documentElement.style.setProperty(
-        "--bubble-radius",
-        s.bubbleRadius + "px"
-      );
-      document.body.classList.toggle("show-tails", !!s.showTails);
-
-      state.avatars.user = s.userAvatar || "";
-      state.avatars.assistant = s.assistantAvatar || "";
-
-      bgColorInput.value = s.bgColor;
-      assistantBubbleColorInput.value = s.assistantBubbleColor;
-      userBubbleColorInput.value = s.userBubbleColor;
-      bubbleOpacityInput.value = String(s.bubbleOpacity);
-      fontSizeRangeInput.value = String(s.fontSize);
-      avatarSizeRangeInput.value = String(s.avatarSize);
-      bubbleRadiusRangeInput.value = String(s.bubbleRadius);
-      toggleTailsInput.checked = !!s.showTails;
-    }
-
-    /* 侧栏 & 设置开关 */
     function toggleSidebar() {
       if (window.innerWidth > 900) return;
       sidebar.classList.toggle("open");
@@ -717,22 +626,17 @@
       settingsPanel.classList.remove("collapsed");
     }
 
-    /* 搜索 */
     searchInput.addEventListener("input", (e) => {
       state.searchQuery = e.target.value.trim();
       renderConversationList();
       renderActiveConversation();
     });
 
-    /* 背景色 / 背景图 */
     bgColorInput.addEventListener("input", (e) => {
-      state.settings.bgColor = e.target.value;
-      document.documentElement.style.setProperty("--chat-bg", state.settings.bgColor);
-      if (!state.settings.bgImage) {
-        chatMain.style.backgroundImage = "none";
-        chatMain.style.background = state.settings.bgColor;
-      }
-      saveSettings();
+      const color = e.target.value;
+      document.documentElement.style.setProperty("--chat-bg", color);
+      chatMain.style.backgroundImage = "none";
+      chatMain.style.background = color;
     });
 
     bgImageInput.addEventListener("change", (e) => {
@@ -740,86 +644,66 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        state.settings.bgImage = ev.target.result;
-        chatMain.style.backgroundImage = `url(${state.settings.bgImage})`;
+        chatMain.style.backgroundImage = `url(${ev.target.result})`;
         chatMain.style.backgroundSize = "cover";
         chatMain.style.backgroundPosition = "center";
         chatMain.style.backgroundRepeat = "no-repeat";
-        saveSettings();
       };
       reader.readAsDataURL(file);
     });
 
     assistantBubbleColorInput.addEventListener("input", (e) => {
-      state.settings.assistantBubbleColor = e.target.value;
       document.documentElement.style.setProperty(
         "--assistant-bubble-color",
-        state.settings.assistantBubbleColor
+        e.target.value
       );
-      saveSettings();
     });
 
     userBubbleColorInput.addEventListener("input", (e) => {
-      state.settings.userBubbleColor = e.target.value;
       document.documentElement.style.setProperty(
         "--user-bubble-color",
-        state.settings.userBubbleColor
+        e.target.value
       );
-      saveSettings();
     });
 
     bubbleOpacityInput.addEventListener("input", (e) => {
-      state.settings.bubbleOpacity = Number(e.target.value);
       document.documentElement.style.setProperty(
         "--bubble-opacity",
-        state.settings.bubbleOpacity
+        e.target.value
       );
-      saveSettings();
     });
 
     fontSizeRangeInput.addEventListener("input", (e) => {
-      state.settings.fontSize = Number(e.target.value);
       document.documentElement.style.setProperty(
         "--bubble-font-size",
-        state.settings.fontSize + "px"
+        e.target.value + "px"
       );
-      saveSettings();
     });
 
     avatarSizeRangeInput.addEventListener("input", (e) => {
-      state.settings.avatarSize = Number(e.target.value);
       document.documentElement.style.setProperty(
         "--avatar-size",
-        state.settings.avatarSize + "px"
+        e.target.value + "px"
       );
-      saveSettings();
-      renderActiveConversation();
     });
 
     bubbleRadiusRangeInput.addEventListener("input", (e) => {
-      state.settings.bubbleRadius = Number(e.target.value);
       document.documentElement.style.setProperty(
         "--bubble-radius",
-        state.settings.bubbleRadius + "px"
+        e.target.value + "px"
       );
-      saveSettings();
     });
 
     toggleTailsInput.addEventListener("change", (e) => {
-      state.settings.showTails = e.target.checked;
-      document.body.classList.toggle("show-tails", state.settings.showTails);
-      saveSettings();
+      document.body.classList.toggle("show-tails", e.target.checked);
     });
 
-    /* 头像上传 */
     userAvatarFileInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        state.settings.userAvatar = ev.target.result;
-        state.avatars.user = state.settings.userAvatar;
-        saveSettings();
+        state.avatars.user = ev.target.result;
         renderActiveConversation();
       };
       reader.readAsDataURL(file);
@@ -830,20 +714,26 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        state.settings.assistantAvatar = ev.target.result;
-        state.avatars.assistant = state.settings.assistantAvatar;
-        saveSettings();
+        state.avatars.assistant = ev.target.result;
         renderActiveConversation();
       };
       reader.readAsDataURL(file);
     });
 
-    /* 导入聊天文件 */
+    /* 导入文件：每次导入都会覆盖旧列表 + 去重 */
     if (fileInputHeader) fileInputHeader.addEventListener("change", handleFiles, false);
 
     function handleFiles(e) {
       const files = Array.from(e.target.files || []);
       if (!files.length) return;
+
+      // 新文件＝新一册聊天册，清空旧状态
+      state.conversations = [];
+      state.activeId = null;
+      state.searchQuery = "";
+      if (searchInput) searchInput.value = "";
+
+      const convMap = new Map(); // key -> conversation
 
       files.forEach((file) => {
         const reader = new FileReader();
@@ -853,15 +743,18 @@
           try {
             const json = JSON.parse(text);
             convs = parseFromJsonExport(json, file.name);
-          } catch {
+          } catch (_) {
             convs = [parseFromTextTranscript(text, file.name)];
           }
 
           convs.forEach((c) => {
             if (!c.messages || !c.messages.length) return;
-            state.conversations.push(c);
+            const key =
+              (c.id || "") + "|" + (c.title || "") + "|" + (c.firstTimeValue || 0);
+            convMap.set(key, c); // 相同 key 自动覆盖，防止重复堆叠
           });
 
+          state.conversations = Array.from(convMap.values());
           sortConversationsByTime();
 
           if (!state.activeId && state.conversations.length) {
@@ -881,7 +774,7 @@
       );
     }
 
-    /* JSON 解析辅助 */
+    /* ------- 解析 JSON：只取主线 + 模型 + 开始时间 ------- */
     function parsePartsToText(parts) {
       if (!Array.isArray(parts)) return "";
       return parts
@@ -1065,7 +958,6 @@
       );
     }
 
-    /* 文本转录格式解析 */
     function parseFromTextTranscript(text, filename) {
       const messages = [];
       const re =
@@ -1259,12 +1151,6 @@
 
       chatBodyEl.scrollTop = chatBodyEl.scrollHeight;
     }
-
-    /* 初始化：读取设置并应用 */
-    loadSettings();
-    applySettingsToUI();
-    renderConversationList();
-    renderActiveConversation();
   </script>
 </body>
 </html>
