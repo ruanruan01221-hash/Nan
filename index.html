@@ -104,6 +104,9 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #e7bfd6; border-radius: 999px; }
 
+    /* 一键隐藏头像 */
+    .hide-avatars .avatar { display: none; }
+
     @media (max-width: 900px) {
       .app { margin: 0; border-radius: 0; width: 100%; height: 100vh; }
       .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 80%; max-width: 320px; transform: translateX(-100%); transition: transform .25s ease; box-shadow: 6px 0 18px rgba(0,0,0,0.15); }
@@ -148,8 +151,11 @@
             <label>头像大小 <input type="range" id="avatarSizeRange" min="26" max="44" value="32" /></label>
             <label>气泡圆角 <input type="range" id="bubbleRadiusRange" min="10" max="26" value="18" /></label>
             <label>气泡小尾巴 <input type="checkbox" id="toggleTails" /></label>
+            <label>隐藏头像 <input type="checkbox" id="hideAvatars" /></label>
+            <button class="icon-btn" id="toggleAvatarBtn" title="一键隐藏/显示头像">🙈</button>
             <div class="divider"></div>
             <label><input type="checkbox" id="autoSaveSettings" checked /> 自动保存设置</label>
+            <label><input type="checkbox" id="autoRestore" checked /> 自动恢复上次会话</label>
             <button class="icon-btn" id="saveSettingsBtn" title="保存设置">💾</button>
             <button class="icon-btn" id="saveSessionBtn" title="保存小世界（会话+滚动+可见条数）">📌</button>
             <button class="icon-btn" id="restoreBtn" title="恢复上次小世界">⤴︎</button>
@@ -190,6 +196,8 @@
         showTails: false,
         avatars: { user: '', assistant: '' },
         autoSave: true,
+        autoRestore: true,
+        showAvatars: true,
       },
       session: {
         conversations: null,       // 保存上一次载入的聊天（小体积时）
@@ -239,8 +247,10 @@
     const avatarSizeRangeInput = document.getElementById('avatarSizeRange');
     const bubbleRadiusRangeInput = document.getElementById('bubbleRadiusRange');
     const toggleTailsInput = document.getElementById('toggleTails');
+    const hideAvatarsInput = document.getElementById('hideAvatars');
 
     const autoSaveSettingsInput = document.getElementById('autoSaveSettings');
+    const autoRestoreInput = document.getElementById('autoRestore');
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
     const saveSessionBtn = document.getElementById('saveSessionBtn');
     const restoreBtn = document.getElementById('restoreBtn');
@@ -279,23 +289,51 @@
     avatarSizeRangeInput.addEventListener('input', e => { document.documentElement.style.setProperty('--avatar-size', e.target.value + 'px'); if (autoSaveSettingsInput.checked) saveSettings(false); });
     bubbleRadiusRangeInput.addEventListener('input', e => { document.documentElement.style.setProperty('--bubble-radius', e.target.value + 'px'); if (autoSaveSettingsInput.checked) saveSettings(false); });
     toggleTailsInput.addEventListener('change', e => { document.body.classList.toggle('show-tails', e.target.checked); if (autoSaveSettingsInput.checked) saveSettings(false); });
+    hideAvatarsInput.addEventListener('change', e => { document.body.classList.toggle('hide-avatars', e.target.checked); if (autoSaveSettingsInput.checked) saveSettings(false); });
 
     userAvatarFileInput.addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = ev => { state.avatars.user = maybeKeepDataUrl(ev.target.result, '軟头像'); state.persist.settings.avatars.user = state.avatars.user; renderActiveConversation(); if (autoSaveSettingsInput.checked) saveSettings(false); }; rd.readAsDataURL(f); });
     assistantAvatarFileInput.addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = ev => { state.avatars.assistant = maybeKeepDataUrl(ev.target.result, '哥哥头像'); state.persist.settings.avatars.assistant = state.avatars.assistant; renderActiveConversation(); if (autoSaveSettingsInput.checked) saveSettings(false); }; rd.readAsDataURL(f); });
 
     if (fileInputHeader) fileInputHeader.addEventListener('change', handleFiles, false);
 
-    autoSaveSettingsInput.addEventListener('change', () => { state.persist.settings.autoSave = autoSaveSettingsInput.checked; savePersist(); note(state.persist.settings.autoSave ? '已开启自动保存设置' : '已关闭自动保存设置'); });
+    autoSaveSettingsInput.addEventListener('change', () => {
+      state.persist.settings.autoSave = autoSaveSettingsInput.checked;
+      savePersist();
+      note(state.persist.settings.autoSave ? '已开启自动保存设置' : '已关闭自动保存设置');
+    });
+    autoRestoreInput.addEventListener('change', () => {
+      state.persist.settings.autoRestore = autoRestoreInput.checked;
+      savePersist();
+      note(state.persist.settings.autoRestore ? '将自动恢复上次会话' : '已关闭自动恢复');
+    });
     saveSettingsBtn.addEventListener('click', () => saveSettings(true));
     saveSessionBtn.addEventListener('click', () => saveSession());
     restoreBtn.addEventListener('click', () => restoreSession());
     exportSettingsBtn.addEventListener('click', () => exportSettings());
     importSettingsFile.addEventListener('change', e => importSettings(e));
-    clearCacheBtn.addEventListener('click', () => { if (confirm('清空本地缓存（设置与小世界会话）？')) { localStorage.removeItem(STORAGE_KEY); location.reload(); } });
+    clearCacheBtn.addEventListener('click', () => {
+      if (confirm('清空本地缓存（设置与小世界会话）？')) {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      }
+    });
+    // 一键隐藏/显示头像按钮
+    document.getElementById('toggleAvatarBtn')?.addEventListener('click', () => {
+      const hide = !document.body.classList.contains('hide-avatars');
+      document.body.classList.toggle('hide-avatars', hide);
+      hideAvatarsInput.checked = hide;
+      if (autoSaveSettingsInput.checked) saveSettings(false);
+      note(hide ? '已隐藏头像' : '已显示头像');
+    });
 
-    // 读取存储的快速提示
+    // 自动恢复或提示
     if (state.persist.session.conversations && state.persist.session.conversations.length) {
-      note('可点击 ⤴︎ 恢复上次的小世界');
+      if (state.persist.settings.autoRestore) {
+        restoreSession();
+        note('已自动恢复上次的小世界');
+      } else {
+        note('可点击 ⤴︎ 恢复上次的小世界');
+      }
     }
 
     // 关闭页前，记住滚动位置和可见条数
@@ -453,6 +491,8 @@
       bubbleRadiusRangeInput.value = s.bubbleRadius || DEFAULTS.settings.bubbleRadius;
       toggleTailsInput.checked = !!s.showTails;
       autoSaveSettingsInput.checked = !!s.autoSave;
+      autoRestoreInput.checked = !!s.autoRestore;
+      hideAvatarsInput.checked = s.showAvatars === false;
 
       // 头像与背景图（只应用，不回填 file input）
       state.avatars.user = s.avatars.user || '';
@@ -469,6 +509,7 @@
       document.documentElement.style.setProperty('--avatar-size', (s.avatarSize || DEFAULTS.settings.avatarSize) + 'px');
       document.documentElement.style.setProperty('--bubble-radius', (s.bubbleRadius || DEFAULTS.settings.bubbleRadius) + 'px');
       document.body.classList.toggle('show-tails', !!s.showTails);
+      document.body.classList.toggle('hide-avatars', s.showAvatars === false);
     }
 
     function readControls(){
@@ -484,6 +525,8 @@
         showTails: !!toggleTailsInput.checked,
         avatars: { user: state.avatars.user || '', assistant: state.avatars.assistant || '' },
         autoSave: !!autoSaveSettingsInput.checked,
+        autoRestore: !!autoRestoreInput.checked,
+        showAvatars: !document.body.classList.contains('hide-avatars'),
       };
     }
 
@@ -567,8 +610,10 @@
         };
       }catch(e){ return structuredClone(DEFAULTS); }
     }
-    function savePersist(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.persist)); } catch(e){ console.warn('保存失败', e); } }
-
+    function savePersist(){
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.persist)); }
+      catch(e){ console.warn('保存失败', e); }
+    }
     function maybeKeepDataUrl(dataUrl, label){
       try{
         const bytes = Math.ceil((dataUrl.length * 3) / 4); // 估算 base64 体积
@@ -576,8 +621,10 @@
         return dataUrl;
       }catch{ return ''; }
     }
-
-    function note(msg){ toast.textContent = msg; toast.classList.add('show'); clearTimeout(note._t); note._t = setTimeout(()=> toast.classList.remove('show'), 1500); }
+    function note(msg){
+      toast.textContent = msg; toast.classList.add('show');
+      clearTimeout(note._t); note._t = setTimeout(()=> toast.classList.remove('show'), 1500);
+    }
   </script>
 </body>
 </html>
