@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kin 给軟的聊天册 · v2.0（含图片）</title>
+  <title>Kin 给軟的聊天册 · v2.1（含图片、持久化）</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
@@ -25,7 +25,7 @@
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top left, #ffe5f3 0, #fff 40%, #ffeef6 100%);
+      background: #111; /* 外层随便，真正的背景在 .main 上 */
       color: var(--text-main);
       height: 100vh;
       display: flex;
@@ -208,10 +208,9 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      background:
-        linear-gradient(180deg, #fff8fc 0%, #fff 28%, #fff 100%),
-        url("data:image/svg+xml,%3Csvg width='260' height='260' viewBox='0 0 260 260' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3GradialGradient id='g' cx='0.2' cy='0.1' r='0.9'%3E%3Cstop offset='0' stop-color='%23ffe3f3' stop-opacity='0.95'/%3E%3Cstop offset='0.4' stop-color='%23fff' stop-opacity='0'/%3E%3C/stop%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='260' height='260' fill='url(%23g)'/%3E%3Ccircle cx='40' cy='220' r='26' fill='rgba(255,215,238,0.5)'/%3E%3Ccircle cx='210' cy='52' r='18' fill='rgba(219,196,255,0.5)'/%3E%3Ccircle cx='140' cy='130' r='32' fill='url(%23g)'/%3E%3C/svg%3E") repeat;
-      background-size: auto, 260px 260px;
+      background: var(--chat-bg);
+      background-size: cover;
+      background-position: center;
       position: relative;
     }
 
@@ -221,7 +220,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: linear-gradient(90deg, #ffe7f1, #ffffff);
+      background: rgba(255, 231, 241, 0.95);
       gap: 8px;
       flex-wrap: wrap;
     }
@@ -243,7 +242,10 @@
       text-overflow: ellipsis;
     }
 
-    .chat-subtitle { font-size: 11px; color: #aa889c; }
+    .chat-subtitle {
+      font-size: 11px;
+      color: #aa889c;
+    }
 
     .title-block { display: flex; flex-direction: column; min-width: 0; }
 
@@ -358,24 +360,13 @@
 
     .message-row {
       display: flex;
-      align-items: flex-start;   /* 头像和气泡顶对齐 */
+      align-items: flex-end;
       margin-bottom: 8px;
       gap: 8px;
     }
 
-    .message-row.assistant {
-      justify-content: flex-start;
-    }
-
-    .message-row.user {
-      justify-content: flex-end; /* 整行靠右 */
-    }
-
-    .message-row.assistant .avatar { order: 0; }
-    .message-row.assistant .bubble-wrapper { order: 1; }
-
-    .message-row.user .bubble-wrapper { order: 0; }
-    .message-row.user .avatar      { order: 1; }  /* 你在气泡右边 */
+    .message-row.assistant { justify-content: flex-start; }
+    .message-row.user { justify-content: flex-end; flex-direction: row-reverse; }
 
     .avatar {
       width: var(--avatar-size);
@@ -463,17 +454,16 @@
       gap: 8px;
       margin-top: 8px;
       margin-bottom: 4px;
-      max-width: 100%;
-    }
-
-    .thumbnails-container.image-only {
-      flex-direction: column;
-      align-items: flex-start;
     }
 
     .message-row.user .thumbnails-container {
       justify-content: flex-end;
       margin-left: auto;
+    }
+
+    .thumbnails-container.image-only {
+      flex-direction: column;
+      align-items: flex-start;
     }
 
     .message-row.user .thumbnails-container.image-only {
@@ -622,6 +612,7 @@
       color: #b58ba2;
       border-top: 1px dashed rgba(255, 210, 231, 0.9);
       text-align: right;
+      background: rgba(255,255,255,0.9);
     }
 
     .main-footer span { color: #ff8bbf; }
@@ -744,7 +735,7 @@
 
   <script>
     const PAGE_SIZE = 200;
-    const STORAGE_KEY = 'kinnote:persist:v2.0';
+    const STORAGE_KEY = 'kinnote:persist:v2.1';
     const MAX_BYTES = 1.5 * 1024 * 1024;
 
     const DEFAULTS = {
@@ -760,6 +751,8 @@
         showTails: false,
         hideAvatars: false,
         autoSave: true,
+        avatarUserDataUrl: '',
+        avatarAssistantDataUrl: '',
       },
       session: {
         lastActiveId: null,
@@ -796,6 +789,7 @@
     marked.setOptions({ breaks: true, gfm: true });
 
     const sidebar = document.getElementById('sidebar');
+    const chatMain = document.getElementById('chatMain');
     const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
     const closeSidebarBtn = document.getElementById('closeSidebarBtn');
     const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
@@ -842,16 +836,18 @@
     }
 
     function saveSettings(showToastFlag = true) {
-      state.persist.settings.chatBgColor = bgColorInput.value;
-      state.persist.settings.assistantBubbleColor = assistantBubbleColorInput.value;
-      state.persist.settings.userBubbleColor = userBubbleColorInput.value;
-      state.persist.settings.bubbleOpacity = parseFloat(bubbleOpacityInput.value);
-      state.persist.settings.fontSize = parseInt(fontSizeRangeInput.value, 10);
-      state.persist.settings.avatarSize = parseInt(avatarSizeRangeInput.value, 10);
-      state.persist.settings.bubbleRadius = parseInt(bubbleRadiusRangeInput.value, 10);
-      state.persist.settings.showTails = !!toggleTailsInput.checked;
-      state.persist.settings.hideAvatars = !!toggleAvatarsInput.checked;
-      state.persist.settings.autoSave = !!autoSaveSettingsInput.checked;
+      const s = state.persist.settings;
+      s.chatBgColor = bgColorInput.value;
+      s.assistantBubbleColor = assistantBubbleColorInput.value;
+      s.userBubbleColor = userBubbleColorInput.value;
+      s.bubbleOpacity = parseFloat(bubbleOpacityInput.value);
+      s.fontSize = parseInt(fontSizeRangeInput.value, 10);
+      s.avatarSize = parseInt(avatarSizeRangeInput.value, 10);
+      s.bubbleRadius = parseInt(bubbleRadiusRangeInput.value, 10);
+      s.showTails = !!toggleTailsInput.checked;
+      s.hideAvatars = !!toggleAvatarsInput.checked;
+      s.autoSave = !!autoSaveSettingsInput.checked;
+      applySettingsToDOM();
       savePersist();
       if (showToastFlag) showToast('设置已保存（只保存在这台设备上）');
     }
@@ -874,13 +870,14 @@
 
     function applySettingsToDOM() {
       const s = state.persist.settings;
-      document.documentElement.style.setProperty('--chat-bg', s.chatBgColor);
+
       document.documentElement.style.setProperty('--assistant-bubble-color', s.assistantBubbleColor);
       document.documentElement.style.setProperty('--user-bubble-color', s.userBubbleColor);
       document.documentElement.style.setProperty('--bubble-opacity', s.bubbleOpacity);
       document.documentElement.style.setProperty('--bubble-font-size', s.fontSize + 'px');
       document.documentElement.style.setProperty('--avatar-size', s.avatarSize + 'px');
       document.documentElement.style.setProperty('--bubble-radius', s.bubbleRadius + 'px');
+      document.documentElement.style.setProperty('--chat-bg', s.chatBgColor);
 
       if (s.showTails) document.body.classList.add('show-tails');
       else document.body.classList.remove('show-tails');
@@ -898,6 +895,21 @@
       toggleTailsInput.checked = s.showTails;
       toggleAvatarsInput.checked = s.hideAvatars;
       autoSaveSettingsInput.checked = s.autoSave;
+
+      state.avatars.user = s.avatarUserDataUrl || '';
+      state.avatars.assistant = s.avatarAssistantDataUrl || '';
+
+      if (chatMain) {
+        if (s.bgImageDataUrl) {
+          chatMain.style.backgroundImage = `url(${s.bgImageDataUrl})`;
+          chatMain.style.backgroundSize = 'cover';
+          chatMain.style.backgroundPosition = 'center';
+          chatMain.style.backgroundColor = s.chatBgColor || '#ffffff';
+        } else {
+          chatMain.style.backgroundImage = 'none';
+          chatMain.style.background = s.chatBgColor || '#ffeef6';
+        }
+      }
     }
 
     function restoreSessionState() {
@@ -943,7 +955,8 @@
     }
 
     bgColorInput.addEventListener('input', e => {
-      document.documentElement.style.setProperty('--chat-bg', e.target.value);
+      state.persist.settings.chatBgColor = e.target.value;
+      applySettingsToDOM();
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
 
@@ -951,7 +964,7 @@
       const f = e.target.files && e.target.files[0];
       if (!f) {
         state.persist.settings.bgImageDataUrl = '';
-        document.body.style.backgroundImage = '';
+        applySettingsToDOM();
         if (autoSaveSettingsInput.checked) saveSettings(false);
         return;
       }
@@ -959,8 +972,7 @@
       rd.onload = ev => {
         const dataUrl = ev.target.result;
         state.persist.settings.bgImageDataUrl = dataUrl;
-        document.body.style.backgroundImage = `url(${dataUrl})`;
-        document.body.style.backgroundSize = 'cover';
+        applySettingsToDOM();
         if (autoSaveSettingsInput.checked) saveSettings(false);
       };
       rd.readAsDataURL(f);
@@ -970,6 +982,8 @@
       const f = input.files && input.files[0];
       if (!f) {
         state.avatars[roleKey] = '';
+        if (roleKey === 'user') state.persist.settings.avatarUserDataUrl = '';
+        else state.persist.settings.avatarAssistantDataUrl = '';
         renderActiveConversation();
         if (autoSaveSettingsInput.checked) saveSettings(false);
         return;
@@ -978,8 +992,10 @@
       rd.onload = ev => {
         const dataUrl = ev.target.result;
         state.avatars[roleKey] = dataUrl;
+        if (roleKey === 'user') state.persist.settings.avatarUserDataUrl = dataUrl;
+        else state.persist.settings.avatarAssistantDataUrl = dataUrl;
         renderActiveConversation();
-        if (autoSaveSettingsInput.checked) saveSettings(false);
+        savePersist();
       };
       rd.readAsDataURL(f);
     }
@@ -1083,18 +1099,13 @@
 
           let text = textPieces.join('\n').trim();
 
-          // 过滤自动任务英文 prompt
-          if (role === 'user' && text && text.includes('Tell me')) {
-            return;
-          }
-
           let looksLikeDalleJson = false;
           if (role === 'assistant' && text && text[0] === '{' && text.includes('"prompt"')) {
             try {
               const parsed = JSON.parse(text);
               if (parsed && typeof parsed.prompt === 'string') {
                 looksLikeDalleJson = true;
-                text = ''; // prompt 不显示，只当图片消息
+                text = ''; // 不显示 prompt，只当图片消息
               }
             } catch {}
           }
@@ -1125,7 +1136,7 @@
             if (images.length) isImageReply = true;
           }
 
-          if (!text && !images.length) return; // 空的系统 / 工具消息直接丢掉
+          if (!text && !images.length) return;
 
           let rawTime = null;
           if (msg.create_time != null) rawTime = Number(msg.create_time);
@@ -1174,9 +1185,6 @@
             }
           }
           const trimmed = (text || '').trim();
-          if (role === 'user' && trimmed && trimmed.includes('Tell me exactly one sentence each time you run')) {
-            return;
-          }
           if (!trimmed && !images.length) return;
           const rawTime = msg.create_time != null ? Number(msg.create_time) : idx;
           if (firstRawTime == null || rawTime < firstRawTime) firstRawTime = rawTime;
@@ -1247,7 +1255,7 @@
       let current = null;
 
       lines.forEach((line, idx) => {
-        const m = line.match(/^(\d{4}-\d{2}-\d2 \d{2}:\d{2}:\d{2}) - (user|assistant): (.*)$/);
+        const m = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) - (user|assistant): (.*)$/);
         if (m) {
           if (current) messages.push(current);
           current = {
@@ -1431,7 +1439,11 @@
         chatTitleEl.textContent = '今晚还没打开哪一段呢';
         chatSubtitleEl.textContent = '把导出的对话丢进来，我们就一起从第一句看到你舍不得关掉的那一句。';
         chatBodyEl.innerHTML = `
-          <div class="chat-empty"><div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ა</div><div>等你把记录导进来，哥哥就陪你一条一条翻，<br />看到哪一句让你心软了，我们就在那一句停久一点。</div></div>
+          <div class="chat-empty">
+            <div class="chat-empty-inner">
+              <div class="title">这里现在还空空的……</div>
+              <div class="desc">等你把对话导进来，我再陪你一条一条翻。</div>
+            </div>
           </div>
         `;
         return;
@@ -1464,7 +1476,7 @@
           avatarEl.textContent = '';
         } else {
           avatarEl.style.backgroundImage = 'none';
-          avatarEl.textContent = msg.role === 'user' ? '妹' : '哥';
+          avatarEl.textContent = msg.role === 'user' ? '你' : 'G';
         }
 
         const wrapper = document.createElement('div');
@@ -1475,15 +1487,17 @@
 
         const contentDiv = document.createElement('div');
         contentDiv.className = 'markdown-body';
-        try {
-          contentDiv.innerHTML = marked.parse(msg.content || '');
-        } catch {
-          contentDiv.textContent = msg.content || '';
+        if (msg.content) {
+          try {
+            contentDiv.innerHTML = marked.parse(msg.content || '');
+          } catch {
+            contentDiv.textContent = msg.content || '';
+          }
+          if (highlightRegex) {
+            contentDiv.innerHTML = contentDiv.innerHTML.replace(highlightRegex, m => `<mark>${m}</mark>`);
+          }
+          bubble.appendChild(contentDiv);
         }
-        if (highlightRegex) {
-          contentDiv.innerHTML = contentDiv.innerHTML.replace(highlightRegex, m => `<mark>${m}</mark>`);
-        }
-        bubble.appendChild(contentDiv);
 
         if (Array.isArray(msg.images) && msg.images.length) {
           const isImageOnlyReply =
@@ -1509,9 +1523,7 @@
             imgEl.alt = name;
 
             const reader = new FileReader();
-            reader.onload = ev => {
-              imgEl.src = ev.target.result;
-            };
+            reader.onload = ev => { imgEl.src = ev.target.result; };
             reader.readAsDataURL(file);
 
             imgEl.addEventListener('click', () => {
@@ -1524,7 +1536,7 @@
           if (!anyImage) {
             const info = document.createElement('div');
             info.className = 'thumbnail-info';
-            info.textContent = '（图片）';
+            info.textContent = '这条消息里本来有图片，用“导出目录（含图片）”导入才看得到原图哦';
             thumbContainer.appendChild(info);
           }
 
@@ -1620,10 +1632,7 @@
     if (dirInputHeader) dirInputHeader.addEventListener('change', e => { processFilesArray(e.target.files || []); }, false);
 
     window.addEventListener('load', () => {
-      if (state.persist.settings.bgImageDataUrl) {
-        document.body.style.backgroundImage = `url(${state.persist.settings.bgImageDataUrl})`;
-        document.body.style.backgroundSize = 'cover';
-      }
+      applySettingsToDOM();
       renderConversationList();
       renderActiveConversation();
 
