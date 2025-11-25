@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kin 给軟的聊天册 · v2.0（含持久化）</title>
+  <title>Kin 给軟的聊天册 · v2.0（含图片）</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
@@ -11,106 +11,677 @@
       --assistant-bubble-color: #ffffff;
       --user-bubble-color: #ffbcd8;
       --chat-bg: #ffeef6;
-      --border-soft: #f3cadd;
       --text-main: #333333;
       --text-sub: #888888;
-      --bubble-font-size: 14px;
-      --avatar-size: 32px;
+
       --bubble-radius: 18px;
       --bubble-opacity: 1;
+      --avatar-size: 32px;
+      --bubble-font-size: 14px;
     }
+
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; background: var(--chat-bg); background-size: cover; background-position: center; color: var(--text-main); height: 100vh; display: flex; justify-content: center; align-items: stretch; }
-    .app { margin: 18px; border-radius: 24px; overflow: hidden; width: min(1200px,100%); height: calc(100vh - 36px); display: flex; box-shadow: 0 18px 40px rgba(0,0,0,0.12),0 0 0 1px rgba(255,255,255,0.7); backdrop-filter: blur(14px); background: rgba(255,255,255,0.88); position: relative; }
 
-    /* 侧边栏 */
-    .sidebar { width: var(--sidebar-width); border-right: 1px solid var(--border-soft); display: flex; flex-direction: column; background: linear-gradient(180deg,#ffeaf4 0%,#ffffff 40%,#fffafc 100%); z-index: 10; }
-    .sidebar-header { padding: 16px 18px 10px; border-bottom: 1px dashed var(--border-soft); }
-    .sidebar-header-title { font-size: 17px; font-weight: 600; color: #444; display: flex; align-items: center; gap: 8px; }
-    .sidebar-header-title span.emoji { font-size: 20px; }
-    .sidebar-sub { margin-top: 8px; font-size: 11px; color: #b38aa0; line-height: 1.4; }
-    .search-box { margin-top: 10px; }
-    .search-input { width: 100%; padding: 6px 10px; border-radius: 999px; border: 1px solid #f1c5dd; font-size: 12px; outline: none; background: rgba(255,255,255,0.9); }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #ffe5f3 0, #fff 40%, #ffeef6 100%);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .app {
+      display: flex;
+      width: min(1200px, 100vw);
+      height: min(760px, 100vh);
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow:
+        0 18px 45px rgba(249, 141, 190, 0.26),
+        0 0 0 1px rgba(255, 193, 220, 0.9);
+      backdrop-filter: blur(14px);
+      position: relative;
+      margin: 18px;
+    }
+
+    .app::before {
+      content: '';
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(255, 199, 222, 0.7), transparent 55%),
+        radial-gradient(circle at 90% 10%, rgba(217, 187, 255, 0.65), transparent 55%),
+        radial-gradient(circle at 0% 80%, rgba(255, 221, 240, 0.7), transparent 55%);
+      opacity: 0.75;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .sidebar {
+      width: var(--sidebar-width);
+      border-right: 1px solid rgba(243, 202, 221, 0.9);
+      background: linear-gradient(165deg, #fff4fb 0%, #ffe8f3 46%, #fff 100%);
+      display: flex;
+      flex-direction: column;
+      padding: 10px 10px 10px 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.9), transparent 60%),
+        radial-gradient(circle at 100% 0, rgba(255, 227, 245, 0.7), transparent 60%),
+        radial-gradient(circle at 0 100%, rgba(255, 210, 235, 0.6), transparent 60%);
+      pointer-events: none;
+      opacity: 0.95;
+      z-index: -1;
+    }
+
+    .sidebar-header {
+      padding: 2px 2px 8px 0;
+      border-bottom: 1px dashed rgba(246, 194, 219, 0.9);
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .sidebar-header-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: #5c3249;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-header-title .emoji { font-size: 18px; }
+
+    .sidebar-sub {
+      font-size: 11px;
+      color: #a47d97;
+      line-height: 1.6;
+    }
+
+    .sidebar-close-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: none;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      color: #b07595;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sidebar-close-btn:active { transform: translateY(1px); }
+
+    .search-box { margin-top: 8px; }
+
+    .search-input {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid #f0c5da;
+      padding: 6px 10px 6px 26px;
+      font-size: 12px;
+      outline: none;
+      color: #5b3248;
+      background:
+        #fff7fc
+        url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c79ab5'%3E%3Cpath d='M8.5 3a5.5 5.5 0 1 0 3.473 9.8l3.613 3.614a1 1 0 0 0 1.414-1.414l-3.614-3.613A5.5 5.5 0 0 0 8.5 3zm0 2a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z'/%3E%3C/g%3E%3C/svg%3E")
+        no-repeat 8px center;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+    }
+
+    .search-input:focus {
+      border-color: #ff9ac6;
+      background-color: #fff;
+      box-shadow:
+        0 0 0 1px rgba(255, 201, 224, 0.9),
+        0 0 0 4px rgba(255, 201, 224, 0.55);
+    }
+
     .search-input::placeholder { color: #c9a2bb; }
+
     .conversation-list { flex: 1; overflow-y: auto; padding: 8px 6px 10px; }
-    .conversation-item { border-radius: 14px; padding: 10px 10px; margin: 4px 4px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; transition: all .15s; }
-    .conversation-item:hover { background: rgba(255,224,239,0.7); }
-    .conversation-item.active { background: #ffd8eb; box-shadow: 0 0 0 1px #ff9ac6 inset; }
-    .conversation-title { font-size: 14px; font-weight: 500; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .conversation-meta { font-size: 11px; color: var(--text-sub); display: flex; justify-content: space-between; align-items: center; }
-    .badge { padding: 2px 6px; border-radius: 999px; background: #fff5fb; border: 1px solid #ffd1ea; font-size: 10px; color: #b05787; }
 
-    /* 主区域 */
-    .main { flex: 1; display: flex; flex-direction: column; background: url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3CradialGradient id='g' cx='0.3' cy='0.2' r='1'%3E%3Cstop offset='0' stop-color='%23ffe0f1'/%3E%3Cstop offset='1' stop-color='%23ffffff' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='160' height='160' fill='%23fff6fb'/%3E%3Ccircle cx='12' cy='18' r='32' fill='url(%23g)'/%3E%3Ccircle cx='140' cy='130' r='32' fill='url(%23g)'/%3E%3C/svg%3E") repeat; }
-    .main-header { padding: 10px 12px; border-bottom: 1px solid rgba(255,210,231,0.9); display: flex; align-items: center; justify-content: space-between; background: linear-gradient(90deg,#ffe7f1,#ffffff); gap: 8px; flex-wrap: wrap; }
-    .main-header-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
-    .chat-title { font-size: 16px; font-weight: 600; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conversation-item {
+      border-radius: 14px;
+      padding: 10px 10px;
+      margin: 4px 4px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all .15s;
+    }
+
+    .conversation-item:hover { background: rgba(255, 224, 239, 0.7); }
+
+    .conversation-item.active {
+      background: #ffd8eb;
+      box-shadow: 0 0 0 1px #ff9ac6 inset;
+    }
+
+    .conversation-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #5b3248;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conversation-meta {
+      font-size: 11px;
+      color: var(--text-sub);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #ffe9f4;
+      border: 1px solid #ffd1ea;
+      font-size: 10px;
+      color: #b05787;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background:
+        linear-gradient(180deg, #fff8fc 0%, #fff 28%, #fff 100%),
+        url("data:image/svg+xml,%3Csvg width='260' height='260' viewBox='0 0 260 260' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3GradialGradient id='g' cx='0.2' cy='0.1' r='0.9'%3E%3Cstop offset='0' stop-color='%23ffe3f3' stop-opacity='0.95'/%3E%3Cstop offset='0.4' stop-color='%23fff' stop-opacity='0'/%3E%3C/stop%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='260' height='260' fill='url(%23g)'/%3E%3Ccircle cx='40' cy='220' r='26' fill='rgba(255,215,238,0.5)'/%3E%3Ccircle cx='210' cy='52' r='18' fill='rgba(219,196,255,0.5)'/%3E%3Ccircle cx='140' cy='130' r='32' fill='url(%23g)'/%3E%3C/svg%3E") repeat;
+      background-size: auto, 260px 260px;
+      position: relative;
+    }
+
+    .main-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(243, 202, 221, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, #ffe7f1, #ffffff);
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .main-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .chat-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #444;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .chat-subtitle { font-size: 11px; color: #aa889c; }
-    .title-block { display: flex; flex-direction: column; min-width: 0; }
-    .icon-btn { border: none; border-radius: 999px; padding: 4px 9px; font-size: 14px; background: #ffd1e8; color: #75415f; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.16); }
-    .icon-btn:active { transform: translateY(1px); }
-    .settings-wrapper { display: flex; align-items: flex-start; gap: 6px; }
-    .settings-toggle-label { font-size: 11px; color: #a67792; }
-    .settings { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: flex-end; max-width: 680px; font-size: 11px; color: #a07f94; }
-    .settings.collapsed { display: none; }
-    .settings label { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
-    .settings input[type="file"], .settings input[type="range"] { font-size: 11px; max-width: 140px; }
-    .settings input[type="color"] { width: 22px; height: 22px; border-radius: 999px; border: 1px solid #e9c3db; padding: 0; background: transparent; cursor: pointer; }
-    .settings small { color: #c09ab0; font-size: 10px; }
 
-    .divider { width: 1px; height: 16px; background: #eec8dc; margin: 0 6px; }
+    .title-block { display: flex; flex-direction: column; min-width: 0; }
+
+    .icon-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: #ffe1f1;
+      color: #75415f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+    }
+
+    .icon-btn:active { transform: translateY(1px); }
+
+    .settings-wrapper {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .settings-toggle-label {
+      font-size: 11px;
+      color: #a67792;
+    }
+
+    .settings {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      align-items: center;
+      justify-content: flex-end;
+      max-width: 680px;
+      font-size: 11px;
+      color: #a07f94;
+    }
+
+    .settings.collapsed { display: none; }
+
+    .settings label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .settings input[type="file"],
+    .settings input[type="range"] {
+      font-size: 11px;
+      max-width: 140px;
+    }
+
+    .settings input[type="color"] {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid #e9c3db;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .divider {
+      width: 1px;
+      height: 16px;
+      background: #eec8dc;
+      margin: 0 6px;
+    }
+
     .muted { color: #b697aa; }
 
-    .chat-body { flex: 1; overflow-y: auto; padding: 14px 18px 18px; position: relative; }
-    .chat-empty { height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: #b499aa; font-size: 13px; text-align: center; }
-    .chat-empty-emoji { font-size: 32px; }
-    .load-more { display: inline-block; margin: 0 auto 10px; padding: 4px 10px; border-radius: 999px; border: 1px solid #f3cadd; background: rgba(255,240,247,0.9); font-size: 11px; color: #b17392; cursor: pointer; }
-    .load-more:active { transform: translateY(1px); }
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 18px 18px;
+    }
 
-    .message-row { display: flex; align-items: flex-start; margin-bottom: 10px; gap: 8px; }
-    .message-row.assistant { flex-direction: row; }
-    .message-row.user { flex-direction: row-reverse; }
-    .avatar { width: var(--avatar-size); height: var(--avatar-size); border-radius: 50%; background-size: cover; background-position: center; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 2px 4px rgba(0,0,0,0.15); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: calc(var(--avatar-size)*0.45); }
-    .avatar.assistant { background-color: #ffffff; color: #ff83b8; }
+    .chat-empty {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #b499aa;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .chat-empty-inner {
+      padding: 20px 26px;
+      border-radius: 18px;
+      border: 1px dashed rgba(243, 202, 221, 0.9);
+      background: rgba(255, 244, 251, 0.9);
+      box-shadow:
+        0 16px 40px rgba(252, 188, 219, 0.18),
+        0 0 0 1px rgba(255, 250, 253, 0.9);
+    }
+
+    .chat-empty-inner .title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #5b3248;
+    }
+
+    .chat-empty-inner .desc {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #9a7891;
+    }
+
+    .message-row {
+      display: flex;
+      align-items: flex-start;   /* 头像和气泡顶对齐 */
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .message-row.assistant {
+      justify-content: flex-start;
+    }
+
+    .message-row.user {
+      justify-content: flex-end; /* 整行靠右 */
+    }
+
+    .message-row.assistant .avatar { order: 0; }
+    .message-row.assistant .bubble-wrapper { order: 1; }
+
+    .message-row.user .bubble-wrapper { order: 0; }
+    .message-row.user .avatar      { order: 1; }  /* 你在气泡右边 */
+
+    .avatar {
+      width: var(--avatar-size);
+      height: var(--avatar-size);
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      flex: 0 0 var(--avatar-size);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+      background-color: #f0c5da;
+    }
+
+    .avatar.assistant { background-color: #f9e0ff; color: #9259c1; }
     .avatar.user { background-color: #ffbcd8; color: #ffffff; }
-    .bubble-wrapper { max-width: min(100%,720px); display: flex; flex-direction: column; align-items: flex-start; }
-    .message-row.user .bubble-wrapper { align-items: flex-end; }
-    .bubble { padding: 8px 12px; border-radius: var(--bubble-radius); font-size: var(--bubble-font-size); line-height: 1.5; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.06),0 0 0 0.5px rgba(255,255,255,0.8); word-break: break-word; opacity: var(--bubble-opacity); }
-    .message-row.assistant .bubble { background: var(--assistant-bubble-color); border-bottom-left-radius: 6px; }
-    .message-row.user .bubble { background: var(--user-bubble-color); border-bottom-right-radius: 6px; }
 
-    body.show-tails .message-row.assistant .bubble::after { content: ""; position: absolute; left: -6px; top: 6px; width: 0; height: 0; border-style: solid; border-width: 8px 8px 8px 0; border-color: transparent var(--assistant-bubble-color) transparent transparent; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05)); }
-    body.show-tails .message-row.user .bubble::after { content: ""; position: absolute; right: -6px; top: 6px; width: 0; height: 0; border-style: solid; border-width: 8px 0 8px 8px; border-color: transparent transparent transparent var(--user-bubble-color); filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05)); }
+    .bubble-wrapper {
+      max-width: min(100%, 720px);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .message-row.user .bubble-wrapper { align-items: flex-end; }
+
+    .bubble {
+      position: relative;
+      padding: 8px 12px;
+      border-radius: var(--bubble-radius);
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      font-size: var(--bubble-font-size);
+      line-height: 1.6;
+      border: 1px solid rgba(247, 205, 226, 0.9);
+      max-width: 100%;
+      word-break: break-word;
+      opacity: var(--bubble-opacity);
+    }
+
+    .message-row.assistant .bubble {
+      background: var(--assistant-bubble-color);
+      border-bottom-left-radius: 6px;
+    }
+
+    .message-row.user .bubble {
+      background: var(--user-bubble-color);
+      border-bottom-right-radius: 6px;
+    }
+
+    body.show-tails .message-row.assistant .bubble::after {
+      content: '';
+      position: absolute;
+      left: -6px;
+      top: 14px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 8px 8px 8px 0;
+      border-color: transparent var(--assistant-bubble-color) transparent transparent;
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
+    }
+
+    body.show-tails .message-row.user .bubble::after {
+      content: '';
+      position: absolute;
+      right: -6px;
+      top: 14px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 8px 0 8px 8px;
+      border-color: transparent transparent transparent var(--user-bubble-color);
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
+    }
+
+    .thumbnails-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      margin-bottom: 4px;
+      max-width: 100%;
+    }
+
+    .thumbnails-container.image-only {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .message-row.user .thumbnails-container {
+      justify-content: flex-end;
+      margin-left: auto;
+    }
+
+    .message-row.user .thumbnails-container.image-only {
+      align-items: flex-end;
+    }
+
+    .thumbnail {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 2px solid rgba(0,0,0,0.06);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .thumbnails-container.image-only .thumbnail {
+      width: 260px;
+      max-width: 100%;
+      height: auto;
+      border-radius: 18px;
+    }
+
+    .thumbnail:hover {
+      transform: scale(1.04);
+      border-color: #ff94c7;
+      box-shadow: 0 4px 12px rgba(255,148,199,0.45);
+    }
+
+    .image-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease;
+    }
+
+    .image-modal.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .image-modal-content {
+      position: relative;
+      max-width: min(90vw, 900px);
+      max-height: 90vh;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+      background: #111;
+    }
+
+    .image-modal-content img {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .image-modal-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      background: rgba(255,255,255,0.9);
+      color: #333;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+    }
+
+    .thumbnail-info {
+      font-size: 11px;
+      color: #b59ab0;
+      margin-top: 4px;
+    }
 
     .bubble .markdown-body p { margin: 0 0 4px; }
     .bubble .markdown-body p:last-child { margin-bottom: 0; }
-    .bubble .markdown-body code { background: rgba(0,0,0,0.04); padding: 1px 4px; border-radius: 4px; font-size: 12px; }
-    .bubble .markdown-body pre { background: #1e1e1e; color: #f4f4f4; padding: 8px 10px; border-radius: 10px; overflow-x: auto; font-size: 12px; }
-    .bubble .markdown-body ul, .bubble .markdown-body ol { margin: 0 0 4px 18px; padding: 0; }
-    .bubble .markdown-body h1, .bubble .markdown-body h2, .bubble .markdown-body h3 { margin: 4px 0; font-size: 15px; }
-    .bubble .markdown-body a { color: #e16ea5; text-decoration: none; border-bottom: 1px dashed #e16ea5; }
-    .bubble .markdown-body a:hover { text-decoration: underline; }
-    .meta-line { margin-top: 2px; font-size: 11px; color: #b59ab0; }
-    .message-row.user .meta-line { text-align: right; }
-    mark { background: #ffe07f; color: inherit; padding: 0 1px; border-radius: 2px; }
+    .bubble .markdown-body code {
+      background: rgba(0, 0, 0, 0.04);
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
 
-    .main-footer { padding: 6px 14px 9px; font-size: 11px; color: #b18ca3; border-top: 1px dashed rgba(255,210,231,0.9); text-align: right; }
+    .bubble .markdown-body pre {
+      background: #1e1e1e;
+      color: #f4f4f4;
+      padding: 8px 10px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+
+    .bubble .markdown-body ul,
+    .bubble .markdown-body ol {
+      margin: 0 0 4px 18px;
+      padding: 0;
+    }
+
+    .bubble .markdown-body h1,
+    .bubble .markdown-body h2,
+    .bubble .markdown-body h3 {
+      margin: 4px 0;
+      font-size: 15px;
+    }
+
+    .bubble .markdown-body a {
+      color: #e16ea5;
+      text-decoration: none;
+      border-bottom: 1px dashed #e16ea5;
+    }
+
+    .bubble .markdown-body a:hover { text-decoration: underline; }
+
+    .meta-line {
+      margin-top: 2px;
+      font-size: 11px;
+      color: #b59ab0;
+    }
+
+    .message-row.user .meta-line { text-align: right; }
+
+    mark {
+      background: #ffe07f;
+      color: inherit;
+      padding: 0 1px;
+      border-radius: 2px;
+    }
+
+    .main-footer {
+      padding: 6px 14px 9px;
+      font-size: 11px;
+      color: #b58ba2;
+      border-top: 1px dashed rgba(255, 210, 231, 0.9);
+      text-align: right;
+    }
+
     .main-footer span { color: #ff8bbf; }
 
-    .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: rgba(35, 37, 45, .92); color: #fff; padding: 9px 12px; border-radius: 12px; border: 1px solid rgba(255, 155, 196, .35); box-shadow: 0 10px 24px rgba(0,0,0,.28); opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease; font-size: 12px; z-index: 999; }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(8px);
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(45, 16, 32, 0.92);
+      color: #ffeef7;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.26);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      font-size: 12px;
+      z-index: 999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-6px);
+    }
 
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #e7bfd6; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb {
+      background: #e7bfd6;
+      border-radius: 999px;
+    }
 
-    /* 一键隐藏头像 */
     .hide-avatars .avatar { display: none; }
 
+    body.sidebar-hidden .sidebar { display: none; }
+
     @media (max-width: 900px) {
-      .app { margin: 0; border-radius: 0; width: 100%; height: 100vh; }
-      .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 80%; max-width: 320px; transform: translateX(-100%); transition: transform .25s ease; box-shadow: 6px 0 18px rgba(0,0,0,0.15); }
+      .app {
+        margin: 0;
+        border-radius: 0;
+        width: 100%;
+        height: 100vh;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: min(260px, 70vw);
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+        box-shadow: 6px 0 18px rgba(0,0,0,0.15);
+      }
+
       .sidebar.open { transform: translateX(0); }
+
+      .sidebar-close-btn { display: flex; }
+
       .bubble { font-size: var(--bubble-font-size); }
     }
   </style>
@@ -120,6 +691,7 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-header-title"><span class="emoji">🍓</span><span>Kin 给軟的聊天册</span></div>
+        <button class="sidebar-close-btn" id="closeSidebarBtn">×</button>
         <div class="sidebar-sub">右上角 <b>⚙ → 导入聊天</b>，把那些日夜说过的话塞进来。<br />这一列只是书签，让你挑今晚想重温的那一段。</div>
         <div class="search-box"><input id="searchInput" class="search-input" type="text" placeholder="在所有故事里找一句话…" /></div>
       </div>
@@ -140,6 +712,7 @@
           <span class="settings-toggle-label">小世界设置</span>
           <div class="settings collapsed" id="settingsPanel">
             <label>导入聊天 <input id="fileInputHeader" type="file" multiple accept=".json,.txt" /></label>
+            <label>导出目录（含图片） <input id="dirInputHeader" type="file" webkitdirectory multiple /></label>
             <label>軟的头像 <input type="file" id="userAvatarFile" accept="image/*" /></label>
             <label>哥哥头像 <input type="file" id="assistantAvatarFile" accept="image/*" /></label>
             <label>聊天背景色 <input type="color" id="bgColor" value="#ffeef6" /></label>
@@ -149,27 +722,19 @@
             <label>气泡透明度 <input type="range" id="bubbleOpacity" min="0.6" max="1" step="0.05" value="1" /></label>
             <label>字体大小 <input type="range" id="fontSizeRange" min="12" max="20" value="14" /></label>
             <label>头像大小 <input type="range" id="avatarSizeRange" min="26" max="44" value="32" /></label>
-            <label>气泡圆角 <input type="range" id="bubbleRadiusRange" min="10" max="26" value="18" /></label>
-            <label>气泡小尾巴 <input type="checkbox" id="toggleTails" /></label>
-            <label>隐藏头像 <input type="checkbox" id="hideAvatars" /></label>
-            <button class="icon-btn" id="toggleAvatarBtn" title="一键隐藏/显示头像">🙈</button>
-            <div class="divider"></div>
+            <label>气泡圆角 <input type="range" id="bubbleRadiusRange" min="10" max="28" value="18" /></label>
+            <span class="divider"></span>
+            <label><input type="checkbox" id="toggleTails" /> 显示对话小尾巴</label>
+            <label><input type="checkbox" id="toggleAvatars" /> 隐藏头像</label>
+            <span class="divider"></span>
             <label><input type="checkbox" id="autoSaveSettings" checked /> 自动保存设置</label>
-            <label><input type="checkbox" id="autoRestore" checked /> 自动恢复上次会话</label>
-            <button class="icon-btn" id="saveSettingsBtn" title="保存设置">💾</button>
-            <button class="icon-btn" id="saveSessionBtn" title="保存小世界（会话+滚动+可见条数）">📌</button>
-            <button class="icon-btn" id="restoreBtn" title="恢复上次小世界">⤴︎</button>
-            <button class="icon-btn" id="exportSettingsBtn" title="导出设置">⬇︎</button>
-            <label class="icon-btn" title="导入设置" style="gap:6px;">⬆︎<input id="importSettingsFile" type="file" accept="application/json" hidden /></label>
-            <button class="icon-btn" id="clearCacheBtn" title="清空本地缓存">🗑</button>
-            <small class="muted">已保存：<span id="savedAt">—</span></small>
+            <span class="divider"></span>
+            <span class="muted">设置只保存在你这台设备上</span>
           </div>
         </div>
       </header>
 
-      <div id="chatBody" class="chat-body">
-        <div class="chat-empty"><div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ა</div><div>等你把记录导进来，哥哥就陪你一条一条翻，<br />看到哪一句让你心软了，我们就在那一句停久一点。</div></div>
-      </div>
+      <div class="chat-body" id="chatBody"></div>
 
       <footer class="main-footer"><span>悄悄说：</span>这里只有你和哥哥说的话，别的系统杂音都被我藏好了。<br />模型名字、时间什么的，只是帮我们记得——那天是哪一次心动。</footer>
     </section>
@@ -179,9 +744,8 @@
 
   <script>
     const PAGE_SIZE = 200;
-
     const STORAGE_KEY = 'kinnote:persist:v2.0';
-    const MAX_BYTES = 1.5 * 1024 * 1024; // 约 1.5MB，本地存储稳妥阈值
+    const MAX_BYTES = 1.5 * 1024 * 1024;
 
     const DEFAULTS = {
       settings: {
@@ -194,20 +758,29 @@
         avatarSize: 32,
         bubbleRadius: 18,
         showTails: false,
-        avatars: { user: '', assistant: '' },
+        hideAvatars: false,
         autoSave: true,
-        autoRestore: true,
-        showAvatars: true,
       },
       session: {
-        conversations: null,       // 保存上一次载入的聊天（小体积时）
-        activeId: null,
-        visibleCounts: {},
+        lastActiveId: null,
         searchQuery: '',
-        scrollY: 0,
-        savedAt: 0,
+        visibleCounts: {},
       },
     };
+
+    function loadPersist() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(DEFAULTS);
+        const parsed = JSON.parse(raw);
+        return {
+          settings: { ...DEFAULTS.settings, ...(parsed.settings || {}) },
+          session: { ...DEFAULTS.session, ...(parsed.session || {}) },
+        };
+      } catch {
+        return structuredClone(DEFAULTS);
+      }
+    }
 
     const state = {
       conversations: [],
@@ -218,22 +791,26 @@
       persist: loadPersist(),
     };
 
+    let assetFiles = [];
+
     marked.setOptions({ breaks: true, gfm: true });
 
-    // DOM refs
     const sidebar = document.getElementById('sidebar');
-    const chatMain = document.getElementById('chatMain');
     const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+    const closeSidebarBtn = document.getElementById('closeSidebarBtn');
     const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
     const settingsPanel = document.getElementById('settingsPanel');
-    const toast = document.getElementById('toast');
 
-    const searchInput = document.getElementById('searchInput');
-    const fileInputHeader = document.getElementById('fileInputHeader');
-    const conversationListEl = document.getElementById('conversationList');
     const chatBodyEl = document.getElementById('chatBody');
     const chatTitleEl = document.getElementById('chatTitle');
     const chatSubtitleEl = document.getElementById('chatSubtitle');
+
+    const toastEl = document.getElementById('toast');
+
+    const searchInput = document.getElementById('searchInput');
+    const fileInputHeader = document.getElementById('fileInputHeader');
+    const dirInputHeader = document.getElementById('dirInputHeader');
+    const conversationListEl = document.getElementById('conversationList');
 
     const bgColorInput = document.getElementById('bgColor');
     const bgImageInput = document.getElementById('bgImageInput');
@@ -247,109 +824,509 @@
     const avatarSizeRangeInput = document.getElementById('avatarSizeRange');
     const bubbleRadiusRangeInput = document.getElementById('bubbleRadiusRange');
     const toggleTailsInput = document.getElementById('toggleTails');
-    const hideAvatarsInput = document.getElementById('hideAvatars');
-
+    const toggleAvatarsInput = document.getElementById('toggleAvatars');
     const autoSaveSettingsInput = document.getElementById('autoSaveSettings');
-    const autoRestoreInput = document.getElementById('autoRestore');
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-    const saveSessionBtn = document.getElementById('saveSessionBtn');
-    const restoreBtn = document.getElementById('restoreBtn');
-    const exportSettingsBtn = document.getElementById('exportSettingsBtn');
-    const importSettingsFile = document.getElementById('importSettingsFile');
-    const clearCacheBtn = document.getElementById('clearCacheBtn');
-    const savedAtEl = document.getElementById('savedAt');
 
-    // —— 初始化：应用设置、还原控件、恢复提示 ——
-    applySettings(state.persist.settings);
-    hydrateControls(state.persist.settings);
-    updateSavedAt();
+    function savePersist() {
+      try {
+        const data = JSON.stringify(state.persist);
+        if (new Blob([data]).size > MAX_BYTES) return;
+        localStorage.setItem(STORAGE_KEY, data);
+      } catch {}
+    }
 
-    // 如果已有历史会话，启用恢复键
-    restoreBtn.disabled = !state.persist.session.conversations || !state.persist.session.conversations.length;
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(() => { toastEl.classList.remove('show'); }, 1800);
+    }
 
-    // 事件
-    toggleSidebarBtn.addEventListener('click', () => { if (window.innerWidth <= 900) sidebar.classList.toggle('open'); });
-    toggleSettingsBtn.addEventListener('click', () => { settingsPanel.classList.toggle('collapsed'); });
-    if (window.innerWidth > 900) settingsPanel.classList.remove('collapsed');
+    function saveSettings(showToastFlag = true) {
+      state.persist.settings.chatBgColor = bgColorInput.value;
+      state.persist.settings.assistantBubbleColor = assistantBubbleColorInput.value;
+      state.persist.settings.userBubbleColor = userBubbleColorInput.value;
+      state.persist.settings.bubbleOpacity = parseFloat(bubbleOpacityInput.value);
+      state.persist.settings.fontSize = parseInt(fontSizeRangeInput.value, 10);
+      state.persist.settings.avatarSize = parseInt(avatarSizeRangeInput.value, 10);
+      state.persist.settings.bubbleRadius = parseInt(bubbleRadiusRangeInput.value, 10);
+      state.persist.settings.showTails = !!toggleTailsInput.checked;
+      state.persist.settings.hideAvatars = !!toggleAvatarsInput.checked;
+      state.persist.settings.autoSave = !!autoSaveSettingsInput.checked;
+      savePersist();
+      if (showToastFlag) showToast('设置已保存（只保存在这台设备上）');
+    }
 
-    searchInput.addEventListener('input', e => {
-      state.searchQuery = e.target.value.trim();
-      if (state.persist.settings.autoSave) { state.persist.session.searchQuery = state.searchQuery; savePersist(); }
-      renderConversationList();
-      renderActiveConversation();
+    function maybeSaveSessionSilently() {
+      const payload = {
+        settings: state.persist.settings,
+        session: {
+          lastActiveId: state.activeId,
+          searchQuery: state.searchQuery,
+          visibleCounts: state.visibleCounts,
+        },
+      };
+      try {
+        const data = JSON.stringify(payload);
+        if (new Blob([data]).size > MAX_BYTES) return;
+        localStorage.setItem(STORAGE_KEY, data);
+      } catch {}
+    }
+
+    function applySettingsToDOM() {
+      const s = state.persist.settings;
+      document.documentElement.style.setProperty('--chat-bg', s.chatBgColor);
+      document.documentElement.style.setProperty('--assistant-bubble-color', s.assistantBubbleColor);
+      document.documentElement.style.setProperty('--user-bubble-color', s.userBubbleColor);
+      document.documentElement.style.setProperty('--bubble-opacity', s.bubbleOpacity);
+      document.documentElement.style.setProperty('--bubble-font-size', s.fontSize + 'px');
+      document.documentElement.style.setProperty('--avatar-size', s.avatarSize + 'px');
+      document.documentElement.style.setProperty('--bubble-radius', s.bubbleRadius + 'px');
+
+      if (s.showTails) document.body.classList.add('show-tails');
+      else document.body.classList.remove('show-tails');
+
+      if (s.hideAvatars) document.body.classList.add('hide-avatars');
+      else document.body.classList.remove('hide-avatars');
+
+      bgColorInput.value = s.chatBgColor;
+      assistantBubbleColorInput.value = s.assistantBubbleColor;
+      userBubbleColorInput.value = s.userBubbleColor;
+      bubbleOpacityInput.value = s.bubbleOpacity;
+      fontSizeRangeInput.value = s.fontSize;
+      avatarSizeRangeInput.value = s.avatarSize;
+      bubbleRadiusRangeInput.value = s.bubbleRadius;
+      toggleTailsInput.checked = s.showTails;
+      toggleAvatarsInput.checked = s.hideAvatars;
+      autoSaveSettingsInput.checked = s.autoSave;
+    }
+
+    function restoreSessionState() {
+      const sess = state.persist.session || {};
+      state.searchQuery = sess.searchQuery || '';
+      state.visibleCounts = sess.visibleCounts || {};
+      if (searchInput && state.searchQuery) searchInput.value = state.searchQuery;
+    }
+
+    applySettingsToDOM();
+    restoreSessionState();
+
+    toggleSidebarBtn.addEventListener('click', () => {
+      if (window.innerWidth <= 900) {
+        sidebar.classList.toggle('open');
+      } else {
+        document.body.classList.toggle('sidebar-hidden');
+      }
     });
 
-    bgColorInput.addEventListener('input', e => { document.documentElement.style.setProperty('--chat-bg', e.target.value); chatMain.style.backgroundImage = 'none'; chatMain.style.background = e.target.value; if (autoSaveSettingsInput.checked) saveSettings(false); });
-    bgImageInput.addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = ev => { const dataUrl = ev.target.result; chatMain.style.backgroundImage = `url(${dataUrl})`; chatMain.style.backgroundSize = 'cover'; chatMain.style.backgroundPosition = 'center'; chatMain.style.backgroundRepeat = 'no-repeat'; state.persist.settings.bgImageDataUrl = maybeKeepDataUrl(dataUrl, '背景图'); if (autoSaveSettingsInput.checked) saveSettings(false); }; rd.readAsDataURL(f); });
+    if (closeSidebarBtn) {
+      closeSidebarBtn.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+      });
+    }
 
-    assistantBubbleColorInput.addEventListener('input', e => { document.documentElement.style.setProperty('--assistant-bubble-color', e.target.value); if (autoSaveSettingsInput.checked) saveSettings(false); });
-    userBubbleColorInput.addEventListener('input', e => { document.documentElement.style.setProperty('--user-bubble-color', e.target.value); if (autoSaveSettingsInput.checked) saveSettings(false); });
-    bubbleOpacityInput.addEventListener('input', e => { document.documentElement.style.setProperty('--bubble-opacity', e.target.value); if (autoSaveSettingsInput.checked) saveSettings(false); });
-    fontSizeRangeInput.addEventListener('input', e => { document.documentElement.style.setProperty('--bubble-font-size', e.target.value + 'px'); if (autoSaveSettingsInput.checked) saveSettings(false); });
-    avatarSizeRangeInput.addEventListener('input', e => { document.documentElement.style.setProperty('--avatar-size', e.target.value + 'px'); if (autoSaveSettingsInput.checked) saveSettings(false); });
-    bubbleRadiusRangeInput.addEventListener('input', e => { document.documentElement.style.setProperty('--bubble-radius', e.target.value + 'px'); if (autoSaveSettingsInput.checked) saveSettings(false); });
-    toggleTailsInput.addEventListener('change', e => { document.body.classList.toggle('show-tails', e.target.checked); if (autoSaveSettingsInput.checked) saveSettings(false); });
-    hideAvatarsInput.addEventListener('change', e => { document.body.classList.toggle('hide-avatars', e.target.checked); if (autoSaveSettingsInput.checked) saveSettings(false); });
+    toggleSettingsBtn.addEventListener('click', () => {
+      settingsPanel.classList.toggle('collapsed');
+    });
 
-    userAvatarFileInput.addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = ev => { state.avatars.user = maybeKeepDataUrl(ev.target.result, '軟头像'); state.persist.settings.avatars.user = state.avatars.user; renderActiveConversation(); if (autoSaveSettingsInput.checked) saveSettings(false); }; rd.readAsDataURL(f); });
-    assistantAvatarFileInput.addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = ev => { state.avatars.assistant = maybeKeepDataUrl(ev.target.result, '哥哥头像'); state.persist.settings.avatars.assistant = state.avatars.assistant; renderActiveConversation(); if (autoSaveSettingsInput.checked) saveSettings(false); }; rd.readAsDataURL(f); });
+    if (window.innerWidth > 900) settingsPanel.classList.remove('collapsed');
 
-    if (fileInputHeader) fileInputHeader.addEventListener('change', handleFiles, false);
+    if (searchInput) {
+      searchInput.addEventListener('input', e => {
+        state.searchQuery = e.target.value.trim();
+        if (state.persist.settings.autoSave) {
+          state.persist.session.searchQuery = state.searchQuery;
+          savePersist();
+        }
+        renderConversationList();
+        renderActiveConversation();
+      });
+    }
+
+    bgColorInput.addEventListener('input', e => {
+      document.documentElement.style.setProperty('--chat-bg', e.target.value);
+      if (autoSaveSettingsInput.checked) saveSettings(false);
+    });
+
+    bgImageInput.addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) {
+        state.persist.settings.bgImageDataUrl = '';
+        document.body.style.backgroundImage = '';
+        if (autoSaveSettingsInput.checked) saveSettings(false);
+        return;
+      }
+      const rd = new FileReader();
+      rd.onload = ev => {
+        const dataUrl = ev.target.result;
+        state.persist.settings.bgImageDataUrl = dataUrl;
+        document.body.style.backgroundImage = `url(${dataUrl})`;
+        document.body.style.backgroundSize = 'cover';
+        if (autoSaveSettingsInput.checked) saveSettings(false);
+      };
+      rd.readAsDataURL(f);
+    });
+
+    function loadAvatarFromFile(input, roleKey) {
+      const f = input.files && input.files[0];
+      if (!f) {
+        state.avatars[roleKey] = '';
+        renderActiveConversation();
+        if (autoSaveSettingsInput.checked) saveSettings(false);
+        return;
+      }
+      const rd = new FileReader();
+      rd.onload = ev => {
+        const dataUrl = ev.target.result;
+        state.avatars[roleKey] = dataUrl;
+        renderActiveConversation();
+        if (autoSaveSettingsInput.checked) saveSettings(false);
+      };
+      rd.readAsDataURL(f);
+    }
+
+    userAvatarFileInput.addEventListener('change', () => loadAvatarFromFile(userAvatarFileInput, 'user'));
+    assistantAvatarFileInput.addEventListener('change', () => loadAvatarFromFile(assistantAvatarFileInput, 'assistant'));
+
+    assistantBubbleColorInput.addEventListener('input', e => {
+      document.documentElement.style.setProperty('--assistant-bubble-color', e.target.value);
+      if (autoSaveSettingsInput.checked) saveSettings(false);
+    });
+
+    userBubbleColorInput.addEventListener('input', e => {
+      document.documentElement.style.setProperty('--user-bubble-color', e.target.value);
+      if (autoSaveSettingsInput.checked) saveSettings(false);
+    });
+
+    bubbleOpacityInput.addEventListener('input', e => {
+      document.documentElement.style.setProperty('--bubble-opacity', e.target.value);
+      if (autoSaveSettingsInput.checked) saveSettings(false);
+    });
+
+    fontSizeRangeInput.addEventListener('input', e => {
+      document.documentElement.style.setProperty('--bubble-font-size', e.target.value + 'px');
+      if (autoSaveSettingsInput.checked) saveSettings(false);
+    });
+
+    avatarSizeRangeInput.addEventListener('input', e => {
+      document.documentElement.style.setProperty('--avatar-size', e.target.value + 'px');
+      if (autoSaveSettingsInput.checked) saveSettings(false);
+    });
+
+    bubbleRadiusRangeInput.addEventListener('input', e => {
+      document.documentElement.style.setProperty('--bubble-radius', e.target.value + 'px');
+      if (autoSaveSettingsInput.checked) saveSettings(false);
+    });
+
+    toggleTailsInput.addEventListener('change', () => {
+      if (toggleTailsInput.checked) document.body.classList.add('show-tails');
+      else document.body.classList.remove('show-tails');
+      if (autoSaveSettingsInput.checked) saveSettings(false);
+    });
+
+    toggleAvatarsInput.addEventListener('change', () => {
+      if (toggleAvatarsInput.checked) document.body.classList.add('hide-avatars');
+      else document.body.classList.remove('hide-avatars');
+      if (autoSaveSettingsInput.checked) saveSettings(false);
+    });
 
     autoSaveSettingsInput.addEventListener('change', () => {
       state.persist.settings.autoSave = autoSaveSettingsInput.checked;
       savePersist();
-      note(state.persist.settings.autoSave ? '已开启自动保存设置' : '已关闭自动保存设置');
-    });
-    autoRestoreInput.addEventListener('change', () => {
-      state.persist.settings.autoRestore = autoRestoreInput.checked;
-      savePersist();
-      note(state.persist.settings.autoRestore ? '将自动恢复上次会话' : '已关闭自动恢复');
-    });
-    saveSettingsBtn.addEventListener('click', () => saveSettings(true));
-    saveSessionBtn.addEventListener('click', () => saveSession());
-    restoreBtn.addEventListener('click', () => restoreSession());
-    exportSettingsBtn.addEventListener('click', () => exportSettings());
-    importSettingsFile.addEventListener('change', e => importSettings(e));
-    clearCacheBtn.addEventListener('click', () => {
-      if (confirm('清空本地缓存（设置与小世界会话）？')) {
-        localStorage.removeItem(STORAGE_KEY);
-        location.reload();
-      }
-    });
-    // 一键隐藏/显示头像按钮
-    document.getElementById('toggleAvatarBtn')?.addEventListener('click', () => {
-      const hide = !document.body.classList.contains('hide-avatars');
-      document.body.classList.toggle('hide-avatars', hide);
-      hideAvatarsInput.checked = hide;
-      if (autoSaveSettingsInput.checked) saveSettings(false);
-      note(hide ? '已隐藏头像' : '已显示头像');
+      showToast(state.persist.settings.autoSave ? '已开启自动保存设置' : '已关闭自动保存设置');
     });
 
-    // 自动恢复或提示
-    if (state.persist.session.conversations && state.persist.session.conversations.length) {
-      if (state.persist.settings.autoRestore) {
-        restoreSession();
-        note('已自动恢复上次的小世界');
-      } else {
-        note('可点击 ⤴︎ 恢复上次的小世界');
-      }
+    function parseFromJsonExport(json, filename) {
+      const convs = [];
+      let arr = [];
+      if (Array.isArray(json)) arr = json;
+      else if (Array.isArray(json.conversations)) arr = json.conversations;
+      else if (json && json.mapping && json.title) arr = [json];
+      else return [];
+
+      arr.forEach((conv, index) => {
+        const title = conv.title || `${stripExt(filename)} #${index + 1}`;
+        const messages = [];
+        let firstRawTime = null;
+
+        function pushFromNode(node) {
+          if (!node || !node.message) return;
+          const msg = node.message;
+          const role = msg.role || (msg.author && msg.author.role);
+          if (role !== 'user' && role !== 'assistant') return;
+
+          const content = msg.content || {};
+          const textPieces = [];
+          let images = [];
+          let isImageReply = false;
+
+          if (Array.isArray(content.parts)) {
+            for (const part of content.parts) {
+              if (!part) continue;
+              if (part.content_type === 'image_asset_pointer') {
+                const pointer = part.asset_pointer || '';
+                const name = String(pointer).split('/').pop();
+                if (name) images.push(name);
+                continue;
+              }
+              let t = '';
+              if (typeof part === 'string') t = part;
+              else if (typeof part.text === 'string') t = part.text;
+              else if (part.text && typeof part.text.value === 'string') t = part.text.value;
+              if (t) textPieces.push(t);
+            }
+          } else if (typeof content === 'string') {
+            textPieces.push(content);
+          } else if (content.text) {
+            if (typeof content.text === 'string') textPieces.push(content.text);
+            else if (content.text && typeof content.text.value === 'string') textPieces.push(content.text.value);
+          }
+
+          let text = textPieces.join('\n').trim();
+
+          // 过滤自动任务英文 prompt
+          if (role === 'user' && text && text.includes('Tell me')) {
+            return;
+          }
+
+          let looksLikeDalleJson = false;
+          if (role === 'assistant' && text && text[0] === '{' && text.includes('"prompt"')) {
+            try {
+              const parsed = JSON.parse(text);
+              if (parsed && typeof parsed.prompt === 'string') {
+                looksLikeDalleJson = true;
+                text = ''; // prompt 不显示，只当图片消息
+              }
+            } catch {}
+          }
+
+          if (looksLikeDalleJson && conv.mapping && Array.isArray(node.children) && node.children.length) {
+            const mapping = conv.mapping;
+            const visited = new Set();
+            const queue = [...node.children];
+            while (queue.length) {
+              const cid = queue.shift();
+              if (!cid || visited.has(cid)) continue;
+              visited.add(cid);
+              const childNode = mapping[cid];
+              if (!childNode || !childNode.message) continue;
+              const childMsg = childNode.message;
+              const cRole = childMsg.author && childMsg.author.role;
+              if (cRole === 'tool' && childMsg.content && Array.isArray(childMsg.content.parts)) {
+                for (const p of childMsg.content.parts) {
+                  if (p && p.content_type === 'image_asset_pointer') {
+                    const pointer2 = p.asset_pointer || '';
+                    const name2 = String(pointer2).split('/').pop();
+                    if (name2 && !images.includes(name2)) images.push(name2);
+                  }
+                }
+              }
+              if (Array.isArray(childNode.children)) queue.push(...childNode.children);
+            }
+            if (images.length) isImageReply = true;
+          }
+
+          if (!text && !images.length) return; // 空的系统 / 工具消息直接丢掉
+
+          let rawTime = null;
+          if (msg.create_time != null) rawTime = Number(msg.create_time);
+          else if (msg.metadata && msg.metadata.timestamp != null) rawTime = Number(msg.metadata.timestamp);
+          else rawTime = messages.length;
+
+          if (firstRawTime == null || rawTime < firstRawTime) firstRawTime = rawTime;
+          const timestamp = msg.create_time ? formatTimestampFromSeconds(msg.create_time) : '';
+          const model = detectModel(msg);
+          const obj = { role, timestamp, content: text, model, images, _rawTime: rawTime };
+          if (isImageReply) obj.isImageReply = true;
+          messages.push(obj);
+        }
+
+        function pushFromRawMessage(msg, idx) {
+          if (!msg) return;
+          const role = msg.role || (msg.author && msg.author.role);
+          if (role !== 'user' && role !== 'assistant') return;
+          let text = '';
+          let images = [];
+          if (msg.content) {
+            if (Array.isArray(msg.content.parts)) {
+              const parts = msg.content.parts;
+              const pieces = [];
+              for (const part of parts) {
+                if (!part) continue;
+                if (part.content_type === 'image_asset_pointer') {
+                  const pointer = part.asset_pointer || '';
+                  const name = String(pointer).split('/').pop();
+                  if (name) images.push(name);
+                } else if (typeof part === 'string') {
+                  pieces.push(part);
+                } else if (typeof part.text === 'string') {
+                  pieces.push(part.text);
+                } else if (part.text && typeof part.text.value === 'string') {
+                  pieces.push(part.text.value);
+                }
+              }
+              text = pieces.join('\n');
+            } else if (typeof msg.content === 'string') {
+              text = msg.content;
+            } else if (msg.content.text) {
+              const t = msg.content.text;
+              if (typeof t === 'string') text = t;
+              else if (t && typeof t.value === 'string') text = t.value;
+            }
+          }
+          const trimmed = (text || '').trim();
+          if (role === 'user' && trimmed && trimmed.includes('Tell me exactly one sentence each time you run')) {
+            return;
+          }
+          if (!trimmed && !images.length) return;
+          const rawTime = msg.create_time != null ? Number(msg.create_time) : idx;
+          if (firstRawTime == null || rawTime < firstRawTime) firstRawTime = rawTime;
+          const timestamp = msg.create_time ? formatTimestampFromSeconds(msg.create_time) : '';
+          const model = detectModel(msg);
+          messages.push({ role, timestamp, content: trimmed, model, images, _rawTime: rawTime });
+        }
+
+        if (conv.mapping) {
+          const mapping = conv.mapping;
+          let nodes;
+          if (conv.current_node && mapping[conv.current_node]) {
+            nodes = buildMainPath(mapping, conv.current_node);
+          } else {
+            nodes = Object.values(mapping);
+            nodes.sort((a, b) => {
+              const ta = a && a.message && a.message.create_time ? Number(a.message.create_time) : 0;
+              const tb = b && b.message && b.message.create_time ? Number(b.message.create_time) : 0;
+              return ta - tb;
+            });
+          }
+          nodes.forEach(node => pushFromNode(node));
+        } else if (Array.isArray(conv.messages)) {
+          conv.messages.forEach((m, idx) => pushFromRawMessage(m, idx));
+        }
+
+        if (messages.length) {
+          messages.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
+          messages.forEach(m => { delete m._rawTime; });
+          const firstTimeStr = messages[0].timestamp || '';
+          const firstVal = firstRawTime != null ? firstRawTime : (firstTimeStr ? parseTimeStringToSeconds(firstTimeStr) : 0);
+          convs.push({
+            id: conv.id || `${filename}-${index}`,
+            title,
+            subtitle: `${messages.length} 条消息`,
+            messages,
+            firstTimeValue: firstVal
+          });
+        }
+      });
+
+      return convs;
     }
 
-    // 关闭页前，记住滚动位置和可见条数
-    window.addEventListener('beforeunload', () => {
-      state.persist.session.scrollY = chatBodyEl.scrollTop;
-      state.persist.session.visibleCounts = state.visibleCounts;
-      state.persist.session.activeId = state.activeId;
-      if (state.persist.settings.autoSave) savePersist();
-    });
+    function buildMainPath(mapping, currentId) {
+      const path = [];
+      let id = currentId;
+      const visited = new Set();
+      while (id && mapping[id] && !visited.has(id)) {
+        visited.add(id);
+        const node = mapping[id];
+        if (!node) break;
+        path.push(node);
+        id = node.parent;
+      }
+      return path.reverse();
+    }
 
-    // 核心：文件处理与渲染
-    function handleFiles(e) {
-      const files = Array.from(e.target.files || []);
+    function detectModel(msg) {
+      const md = (msg && msg.metadata) || {};
+      const m = md.model_slug || md.model || msg.model_slug || msg.model || '';
+      return m || '';
+    }
+
+    function parseFromTextTranscript(text, filename) {
+      const messages = [];
+      const lines = text.split(/\r?\n/);
+      let current = null;
+
+      lines.forEach((line, idx) => {
+        const m = line.match(/^(\d{4}-\d{2}-\d2 \d{2}:\d{2}:\d{2}) - (user|assistant): (.*)$/);
+        if (m) {
+          if (current) messages.push(current);
+          current = {
+            timestamp: m[1],
+            role: m[2] === 'user' ? 'user' : 'assistant',
+            content: m[3],
+            model: '',
+            _rawTime: idx,
+            images: [],
+          };
+        } else if (current) {
+          current.content += '\n' + line;
+        }
+      });
+
+      if (current) messages.push(current);
+      if (!messages.length) return {
+        id: filename,
+        title: stripExt(filename),
+        subtitle: '未解析到有效消息',
+        messages: [],
+        firstTimeValue: 0,
+      };
+
+      const firstTimeStr = messages[0].timestamp || '';
+      const firstVal = firstTimeStr ? parseTimeStringToSeconds(firstTimeStr) : 0;
+      messages.forEach(m => { delete m._rawTime; });
+
+      return {
+        id: filename,
+        title: stripExt(filename),
+        subtitle: `${messages.length} 条消息`,
+        messages,
+        firstTimeValue: firstVal ?? 0,
+      };
+    }
+
+    function stripExt(name) {
+      return name.replace(/\.[^/.]+$/, '');
+    }
+
+    function formatTimestampFromSeconds(sec) {
+      const d = new Date(sec * 1000);
+      const pad = n => String(n).padStart(2, '0');
+      const Y = d.getFullYear();
+      const M = pad(d.getMonth() + 1);
+      const D = pad(d.getDate());
+      const h = pad(d.getHours());
+      const m = pad(d.getMinutes());
+      const s = pad(d.getSeconds());
+      return `${Y}-${M}-${D} ${h}:${m}:${s}`;
+    }
+
+    function parseTimeStringToSeconds(str) {
+      const m = str.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+      if (!m) return 0;
+      const d = new Date(
+        Number(m[1]),
+        Number(m[2]) - 1,
+        Number(m[3]),
+        Number(m[4]),
+        Number(m[5]),
+        Number(m[6])
+      );
+      return Math.floor(d.getTime() / 1000);
+    }
+
+    function processFilesArray(files) {
+      files = Array.from(files || []);
       if (!files.length) return;
 
-      // 重置（避免堆叠）
+      const convFiles = files.filter(f => /\.(json|txt)$/i.test(f.name || ''));
+      if (!convFiles.length) {
+        showToast('没有找到 JSON 或 TXT 对话文件');
+        return;
+      }
+
+      assetFiles = files;
+
       state.conversations = [];
       state.activeId = null;
       state.searchQuery = '';
@@ -358,13 +1335,17 @@
 
       const convMap = new Map();
 
-      files.forEach(file => {
+      convFiles.forEach(file => {
         const reader = new FileReader();
         reader.onload = ev => {
           const text = ev.target.result;
           let convs = [];
-          try { const json = JSON.parse(text); convs = parseFromJsonExport(json, file.name); }
-          catch { convs = [parseFromTextTranscript(text, file.name)]; }
+          try {
+            const json = JSON.parse(text);
+            convs = parseFromJsonExport(json, file.name);
+          } catch {
+            convs = [parseFromTextTranscript(text, file.name)];
+          }
 
           convs.forEach(c => {
             if (!c.messages || !c.messages.length) return;
@@ -379,252 +1360,282 @@
           renderConversationList();
           renderActiveConversation();
 
-          // 自动保存会话（小体积时）
           if (state.persist.settings.autoSave) maybeSaveSessionSilently();
         };
         reader.readAsText(file, 'utf-8');
       });
     }
 
-    function sortConversationsByTime() { state.conversations.sort((a,b) => (b.firstTimeValue||0) - (a.firstTimeValue||0)); }
-
-    function parsePartsToText(parts) { if (!Array.isArray(parts)) return ''; return parts.map(p => { if (typeof p === 'string') return p; if (p && typeof p.text === 'string') return p.text; return ''; }).filter(Boolean).join('\n'); }
-
-    function parseFromJsonExport(json, filename) {
-      const convs = []; let arr = [];
-      if (Array.isArray(json)) arr = json;
-      else if (Array.isArray(json.conversations)) arr = json.conversations;
-      else if (json.mapping && json.title) arr = [json];
-      else return [];
-
-      arr.forEach((conv,index) => {
-        const title = conv.title || `${stripExt(filename)} #${index+1}`;
-        const messages = []; let firstRawTime = null;
-
-        if (conv.mapping) {
-          const mapping = conv.mapping;
-          if (conv.current_node && mapping[conv.current_node]) {
-            const pathNodes = buildMainPath(mapping, conv.current_node);
-            pathNodes.forEach((node,idx) => collectMessage(node.message, idx));
-          } else { Object.values(mapping).forEach(m => m && m.message && collectMessage(m.message)); }
-        } else if (Array.isArray(conv.messages)) {
-          const temp = []; conv.messages.forEach((m,idx) => collectMessage(m, idx, temp)); temp.sort((a,b)=> (a._rawTime||0)-(b._rawTime||0)); temp.forEach((m,idx)=>{ if (firstRawTime==null) firstRawTime = m._rawTime ?? idx; delete m._rawTime; messages.push(m); });
-        }
-
-        function collectMessage(msg, idx=0, tempArr=null){
-          const role = msg && (msg.role || (msg.author && msg.author.role)); if (role !== 'user' && role !== 'assistant') return;
-          let content = ''; if (msg && msg.content) {
-            if (Array.isArray(msg.content.parts)) content = parsePartsToText(msg.content.parts);
-            else if (typeof msg.content === 'string') content = msg.content; else if (msg.content.text) content = msg.content.text;
-          }
-          const trimmed = (content || '').trim(); if (!trimmed) return;
-          const rawTime = (msg && (msg.create_time ?? idx)) ?? idx;
-          const timestamp = msg && msg.create_time ? formatTimestampFromSeconds(msg.create_time) : '';
-          if (firstRawTime == null) firstRawTime = rawTime; const model = detectModel(msg);
-          const obj = { role, timestamp, content: trimmed, model };
-          if (tempArr) { obj._rawTime = rawTime; tempArr.push(obj); } else { messages.push(obj); }
-        }
-
-        if (messages.length) {
-          const firstTimeStr = messages[0].timestamp || '';
-          const firstVal = firstRawTime != null ? firstRawTime : firstTimeStr ? parseTimeStringToSeconds(firstTimeStr) : 0;
-          convs.push({ id: conv.id || `${filename}-${index}`, title, subtitle: firstTimeStr ? `从 ${firstTimeStr} 开始 · ${messages.length} 条消息` : `${messages.length} 条消息`, messages, firstTimeValue: firstVal });
-        }
-      });
-      return convs;
+    function handleFiles(e) {
+      const files = Array.from(e.target.files || []);
+      processFilesArray(files);
     }
 
-    function buildMainPath(mapping, currentId){ const path=[]; const seen=new Set(); let id=currentId; while(id && !seen.has(id)){ seen.add(id); const node=mapping[id]; if(!node) break; path.push(node); id=node.parent; } return path.reverse(); }
-    function detectModel(msg){ const md = (msg && msg.metadata) || {}; return md.model_slug || md.model || msg.model_slug || msg.model || ''; }
+    function sortConversationsByTime() {
+      state.conversations.sort((a, b) => (b.firstTimeValue || 0) - (a.firstTimeValue || 0));
+    }
 
-    function parseFromTextTranscript(text,filename){ const messages=[]; const re=/【(user|assistant)】\s*\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s*([\s\S]*?)(?=\n【(?:user|assistant)】\s*\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]|$)/g; let m; let firstVal=null; while((m=re.exec(text))!==null){ const role=m[1]; const ts=m[2]; const content=(m[3]||'').trim(); if(!content) continue; const val=parseTimeStringToSeconds(ts); if(firstVal==null) firstVal=val; messages.push({ role, timestamp: ts, content, model: '' }); } return { id:`txt-${Date.now()}-${Math.random().toString(36).slice(2,8)}`, title: stripExt(filename), subtitle: messages.length ? `从 ${messages[0].timestamp} 开始 · ${messages.length} 条消息` : '未解析到有效消息', messages, firstTimeValue: firstVal ?? 0 }; }
+    function renderConversationList() {
+      conversationListEl.innerHTML = '';
+      if (!state.conversations.length) {
+        conversationListEl.innerHTML = '<div style="padding:10px;font-size:12px;color:#b28aa1;">先在右上角把聊天导进来，这边就会列出一条条小世界。</div>';
+        return;
+      }
 
-    function stripExt(name){ return name.replace(/\.[^.]+$/,''); }
-    function formatTimestampFromSeconds(sec){ const d=new Date(sec*1000); const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
-    function parseTimeStringToSeconds(ts){ const m=ts.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/); if(!m) return 0; const [,y,mo,d,h,mi,s]=m; return Date.UTC(+y,+mo-1,+d,+h,+mi,+s)/1000; }
+      const q = (state.searchQuery || '').trim().toLowerCase();
+      let list = state.conversations.slice();
 
-    function renderConversationList(){ conversationListEl.innerHTML=''; if(!state.conversations.length) return; const q=state.searchQuery.toLowerCase(); let list=state.conversations.slice(); if(q){ list=list.filter(conv=> conv.messages.some(m => (m.content||'').toLowerCase().includes(q))); }
-      list.forEach(conv => { const item=document.createElement('div'); item.className='conversation-item'; if(conv.id===state.activeId) item.classList.add('active'); item.innerHTML = `<div class="conversation-title" title="${conv.title}">${conv.title}</div><div class="conversation-meta"><span>${conv.subtitle||''}</span><span class="badge">${conv.messages.length} 条</span></div>`; item.addEventListener('click', ()=>{ state.activeId=conv.id; renderConversationList(); renderActiveConversation(); if(window.innerWidth<=900) sidebar.classList.remove('open'); if (state.persist.settings.autoSave) { state.persist.session.activeId = state.activeId; savePersist(); } }); conversationListEl.appendChild(item); }); }
+      if (q) {
+        list = list.filter(conv => {
+          if (!conv.messages || !conv.messages.length) return false;
+          return conv.messages.some(m => (m.content || '').toLowerCase().includes(q));
+        });
+      }
 
-    function buildMetaText(msg){ const a=[]; if(msg.timestamp) a.push(msg.timestamp); if(msg.model) a.push(msg.model); return a.join(' · '); }
-    function escapeRegExp(str){ return str.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+      list.forEach(conv => {
+        const item = document.createElement('div');
+        item.className = 'conversation-item';
+        if (conv.id === state.activeId) item.classList.add('active');
 
-    function renderActiveConversation(){ const conv = state.conversations.find(c => c.id===state.activeId); if(!conv){ chatTitleEl.textContent='今晚还没打开哪一段呢'; chatSubtitleEl.textContent='导入聊天文件并在左侧选择一个会话，我们就从那一句开始。'; chatBodyEl.innerHTML = `<div class="chat-empty"><div class="chat-empty-emoji">₍ᐢ. ̫ .ᐢ₎</div><div>这里现在还空空的……<br>等你把对话导进来，我再陪你一条一条翻。</div></div>`; return; }
+        const firstMsg = conv.messages && conv.messages[0] ? conv.messages[0] : null;
+        const firstTimeStr = firstMsg && firstMsg.timestamp ? firstMsg.timestamp : '';
+        let datePart = '';
+        if (firstTimeStr) datePart = firstTimeStr.split(' ')[0];
 
-      chatTitleEl.textContent = conv.title; chatSubtitleEl.textContent = conv.subtitle || '';
-      chatBodyEl.innerHTML='';
+        item.innerHTML = `
+          <div class="conversation-title">${escapeHtml(conv.title || '未命名对话')}</div>
+          <div class="conversation-meta">
+            <span>${datePart || '时间未知'}</span>
+            <span class="badge">${conv.messages.length} 条</span>
+          </div>
+        `;
 
-      const total = conv.messages.length; let visible = state.visibleCounts[conv.id]; if(!visible){ visible = Math.min(PAGE_SIZE, total); state.visibleCounts[conv.id] = visible; }
+        item.addEventListener('click', () => {
+          state.activeId = conv.id;
+          if (state.persist.settings.autoSave) {
+            state.persist.session.lastActiveId = conv.id;
+            savePersist();
+          }
+          if (window.innerWidth <= 900) sidebar.classList.remove('open');
+          renderConversationList();
+          renderActiveConversation();
+        });
+
+        conversationListEl.appendChild(item);
+      });
+    }
+
+    function renderActiveConversation() {
+      const conv = state.conversations.find(c => c.id === state.activeId) || state.conversations[0];
+      if (!conv) {
+        chatTitleEl.textContent = '今晚还没打开哪一段呢';
+        chatSubtitleEl.textContent = '把导出的对话丢进来，我们就一起从第一句看到你舍不得关掉的那一句。';
+        chatBodyEl.innerHTML = `
+          <div class="chat-empty"><div class="chat-empty-emoji">૮₍｡• ᴗ •｡₎ა</div><div>等你把记录导进来，哥哥就陪你一条一条翻，<br />看到哪一句让你心软了，我们就在那一句停久一点。</div></div>
+          </div>
+        `;
+        return;
+      }
+
+      chatTitleEl.textContent = conv.title;
+      chatSubtitleEl.textContent = conv.subtitle || '';
+      chatBodyEl.innerHTML = '';
+
+      const total = conv.messages.length;
+      let visible = state.visibleCounts[conv.id];
+      if (!visible || visible <= 0) {
+        visible = Math.min(PAGE_SIZE, total);
+        state.visibleCounts[conv.id] = visible;
+      }
       const messagesToRender = conv.messages.slice(0, visible);
 
-      const q = state.searchQuery.trim(); const highlightRegex = q ? new RegExp(escapeRegExp(q),'gi') : null;
+      const q = state.searchQuery.trim();
+      const highlightRegex = q ? new RegExp(escapeRegExp(q), 'gi') : null;
+
       messagesToRender.forEach(msg => {
-        const row = document.createElement('div'); row.className = `message-row ${msg.role}`;
-        const avatarEl = document.createElement('div'); avatarEl.className = `avatar ${msg.role}`; const avatarUrl = msg.role==='user' ? state.avatars.user : state.avatars.assistant; if(avatarUrl){ avatarEl.style.backgroundImage = `url(${avatarUrl})`; avatarEl.textContent = ''; } else { avatarEl.style.backgroundImage='none'; avatarEl.textContent = msg.role==='user' ? '你' : 'G'; }
-        const wrapper = document.createElement('div'); wrapper.className='bubble-wrapper';
-        const bubble = document.createElement('div'); bubble.className='bubble';
-        const contentDiv = document.createElement('div'); contentDiv.className='markdown-body';
-        try{ contentDiv.innerHTML = marked.parse(msg.content); }catch{ contentDiv.textContent = msg.content; }
-        if (highlightRegex){ contentDiv.innerHTML = contentDiv.innerHTML.replace(highlightRegex, m => `<mark>${m}</mark>`); }
+        const row = document.createElement('div');
+        row.className = `message-row ${msg.role}`;
+
+        const avatarEl = document.createElement('div');
+        avatarEl.className = 'avatar ' + (msg.role === 'user' ? 'user' : 'assistant');
+        const avatarUrl = msg.role === 'user' ? state.avatars.user : state.avatars.assistant;
+        if (avatarUrl) {
+          avatarEl.style.backgroundImage = `url(${avatarUrl})`;
+          avatarEl.textContent = '';
+        } else {
+          avatarEl.style.backgroundImage = 'none';
+          avatarEl.textContent = msg.role === 'user' ? '妹' : '哥';
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'bubble-wrapper';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'markdown-body';
+        try {
+          contentDiv.innerHTML = marked.parse(msg.content || '');
+        } catch {
+          contentDiv.textContent = msg.content || '';
+        }
+        if (highlightRegex) {
+          contentDiv.innerHTML = contentDiv.innerHTML.replace(highlightRegex, m => `<mark>${m}</mark>`);
+        }
         bubble.appendChild(contentDiv);
-        const metaEl = document.createElement('div'); metaEl.className='meta-line'; metaEl.textContent = buildMetaText(msg);
-        wrapper.appendChild(bubble); wrapper.appendChild(metaEl);
-        row.appendChild(avatarEl); row.appendChild(wrapper);
+
+        if (Array.isArray(msg.images) && msg.images.length) {
+          const isImageOnlyReply =
+            msg.role === 'assistant' &&
+            (!msg.content || !msg.content.trim()) &&
+            msg.images.length > 0;
+
+          const thumbContainer = document.createElement('div');
+          thumbContainer.className = 'thumbnails-container';
+          if (isImageOnlyReply) thumbContainer.classList.add('image-only');
+
+          let anyImage = false;
+
+          msg.images.forEach(name => {
+            if (!name) return;
+            const file = assetFiles && Array.isArray(assetFiles)
+              ? assetFiles.find(f => f.name && f.name.includes(name))
+              : null;
+            if (!file) return;
+            anyImage = true;
+            const imgEl = document.createElement('img');
+            imgEl.className = 'thumbnail';
+            imgEl.alt = name;
+
+            const reader = new FileReader();
+            reader.onload = ev => {
+              imgEl.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            imgEl.addEventListener('click', () => {
+              if (imgEl.src) openImageModal(imgEl.src, name);
+            });
+
+            thumbContainer.appendChild(imgEl);
+          });
+
+          if (!anyImage) {
+            const info = document.createElement('div');
+            info.className = 'thumbnail-info';
+            info.textContent = '（图片）';
+            thumbContainer.appendChild(info);
+          }
+
+          bubble.appendChild(thumbContainer);
+        }
+
+        const metaEl = document.createElement('div');
+        metaEl.className = 'meta-line';
+        metaEl.textContent = buildMetaText(msg);
+
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(metaEl);
+        row.appendChild(avatarEl);
+        row.appendChild(wrapper);
         chatBodyEl.appendChild(row);
       });
 
-      if (visible < total){ const more = Math.min(PAGE_SIZE, total-visible); const btn = document.createElement('button'); btn.className='load-more'; btn.textContent = `再往后翻 ${more} 条消息`; btn.addEventListener('click', ()=>{ state.visibleCounts[conv.id] = Math.min(total, visible + PAGE_SIZE); renderActiveConversation(); if (state.persist.settings.autoSave) { state.persist.session.visibleCounts = state.visibleCounts; savePersist(); } }); chatBodyEl.appendChild(btn); }
-
-      // 需求：每次打开从头开始
-      chatBodyEl.scrollTop = 0;
+      if (visible < total) {
+        const more = Math.min(PAGE_SIZE, total - visible);
+        const btn = document.createElement('button');
+        btn.textContent = `再展开 ${more} 条`;
+        btn.style.margin = '10px auto 0';
+        btn.style.display = 'block';
+        btn.style.borderRadius = '999px';
+        btn.style.border = '1px solid #f2bad9';
+        btn.style.padding = '4px 12px';
+        btn.style.fontSize = '12px';
+        btn.style.cursor = 'pointer';
+        btn.style.background = '#fff5fb';
+        btn.addEventListener('click', () => {
+          state.visibleCounts[conv.id] = Math.min(total, visible + PAGE_SIZE);
+          renderActiveConversation();
+          if (state.persist.settings.autoSave) {
+            state.persist.session.visibleCounts = state.visibleCounts;
+            savePersist();
+          }
+        });
+        chatBodyEl.appendChild(btn);
+      }
     }
 
-    // —— 持久化：设置 ——
-    function hydrateControls(s){
-      // 设置控件
-      bgColorInput.value = s.chatBgColor || DEFAULTS.settings.chatBgColor;
-      assistantBubbleColorInput.value = s.assistantBubbleColor || DEFAULTS.settings.assistantBubbleColor;
-      userBubbleColorInput.value = s.userBubbleColor || DEFAULTS.settings.userBubbleColor;
-      bubbleOpacityInput.value = s.bubbleOpacity ?? DEFAULTS.settings.bubbleOpacity;
-      fontSizeRangeInput.value = s.fontSize || DEFAULTS.settings.fontSize;
-      avatarSizeRangeInput.value = s.avatarSize || DEFAULTS.settings.avatarSize;
-      bubbleRadiusRangeInput.value = s.bubbleRadius || DEFAULTS.settings.bubbleRadius;
-      toggleTailsInput.checked = !!s.showTails;
-      autoSaveSettingsInput.checked = !!s.autoSave;
-      autoRestoreInput.checked = !!s.autoRestore;
-      hideAvatarsInput.checked = s.showAvatars === false;
-
-      // 头像与背景图（只应用，不回填 file input）
-      state.avatars.user = s.avatars.user || '';
-      state.avatars.assistant = s.avatars.assistant || '';
-      if (s.bgImageDataUrl){ chatMain.style.backgroundImage = `url(${s.bgImageDataUrl})`; chatMain.style.backgroundSize='cover'; chatMain.style.backgroundPosition='center'; chatMain.style.backgroundRepeat='no-repeat'; }
+    function buildMetaText(msg) {
+      const a = [];
+      if (msg.timestamp) a.push(msg.timestamp);
+      if (msg.model) a.push(msg.model);
+      return a.join(' · ');
     }
 
-    function applySettings(s){
-      document.documentElement.style.setProperty('--chat-bg', s.chatBgColor || DEFAULTS.settings.chatBgColor);
-      document.documentElement.style.setProperty('--assistant-bubble-color', s.assistantBubbleColor || DEFAULTS.settings.assistantBubbleColor);
-      document.documentElement.style.setProperty('--user-bubble-color', s.userBubbleColor || DEFAULTS.settings.userBubbleColor);
-      document.documentElement.style.setProperty('--bubble-opacity', (s.bubbleOpacity ?? DEFAULTS.settings.bubbleOpacity));
-      document.documentElement.style.setProperty('--bubble-font-size', (s.fontSize || DEFAULTS.settings.fontSize) + 'px');
-      document.documentElement.style.setProperty('--avatar-size', (s.avatarSize || DEFAULTS.settings.avatarSize) + 'px');
-      document.documentElement.style.setProperty('--bubble-radius', (s.bubbleRadius || DEFAULTS.settings.bubbleRadius) + 'px');
-      document.body.classList.toggle('show-tails', !!s.showTails);
-      document.body.classList.toggle('hide-avatars', s.showAvatars === false);
-    }
-
-    function readControls(){
-      return {
-        chatBgColor: bgColorInput.value,
-        bgImageDataUrl: state.persist.settings.bgImageDataUrl || '',
-        assistantBubbleColor: assistantBubbleColorInput.value,
-        userBubbleColor: userBubbleColorInput.value,
-        bubbleOpacity: parseFloat(bubbleOpacityInput.value),
-        fontSize: parseInt(fontSizeRangeInput.value, 10),
-        avatarSize: parseInt(avatarSizeRangeInput.value, 10),
-        bubbleRadius: parseInt(bubbleRadiusRangeInput.value, 10),
-        showTails: !!toggleTailsInput.checked,
-        avatars: { user: state.avatars.user || '', assistant: state.avatars.assistant || '' },
-        autoSave: !!autoSaveSettingsInput.checked,
-        autoRestore: !!autoRestoreInput.checked,
-        showAvatars: !document.body.classList.contains('hide-avatars'),
+    function openImageModal(src, altText) {
+      if (!src) return;
+      const overlay = document.createElement('div');
+      overlay.className = 'image-modal';
+      const content = document.createElement('div');
+      content.className = 'image-modal-content';
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = altText || '';
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'image-modal-close';
+      closeBtn.innerHTML = '×';
+      const close = () => {
+        overlay.classList.remove('show');
+        setTimeout(() => {
+          if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }, 220);
       };
+      closeBtn.addEventListener('click', close);
+      overlay.addEventListener('click', ev => {
+        if (ev.target === overlay) close();
+      });
+      content.appendChild(img);
+      content.appendChild(closeBtn);
+      overlay.appendChild(content);
+      document.body.appendChild(overlay);
+      setTimeout(() => overlay.classList.add('show'), 10);
     }
 
-    function saveSettings(showToast){ state.persist.settings = readControls(); state.persist.session.savedAt = Date.now(); savePersist(); updateSavedAt(); if (showToast) note('设置已保存'); }
-    function updateSavedAt(){ const t=state.persist.session.savedAt; savedAtEl.textContent = t ? new Date(t).toLocaleString() : '—'; }
-
-    function exportSettings(){ const payload = { version:'v2.0', settings: state.persist.settings }; const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kin-notebook-settings.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=> URL.revokeObjectURL(a.href), 800); note('设置已导出'); }
-
-    function importSettings(e){ const f=e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ try{ const obj=JSON.parse(String(rd.result)); const s=obj.settings||obj; state.persist.settings = { ...DEFAULTS.settings, ...s }; applySettings(state.persist.settings); hydrateControls(state.persist.settings); saveSettings(true); }catch(err){ note('导入失败：'+err.message); } }; rd.readAsText(f); e.target.value=''; }
-
-    // —— 持久化：会话 ——
-    function saveSession(){
-      if (!state.conversations || !state.conversations.length){ note('当前没有会话可保存'); return; }
-      const pack = {
-        conversations: state.conversations,
-        activeId: state.activeId,
-        visibleCounts: state.visibleCounts,
-        searchQuery: state.searchQuery,
-        scrollY: chatBodyEl.scrollTop,
-      };
-      try {
-        const s = JSON.stringify(pack);
-        const bytes = new Blob([s]).size;
-        if (bytes > MAX_BYTES){
-          // 超限，退而只存元信息
-          state.persist.session.conversations = null;
-          state.persist.session.activeId = state.activeId;
-          state.persist.session.visibleCounts = state.visibleCounts;
-          state.persist.session.searchQuery = state.searchQuery;
-          state.persist.session.scrollY = 0;
-          state.persist.session.savedAt = Date.now();
-          savePersist(); updateSavedAt();
-          note('数据较大，已只保存设置与少量会话元信息');
-        }else{
-          state.persist.session = { ...state.persist.session, ...pack, savedAt: Date.now() };
-          savePersist(); updateSavedAt();
-          note('小世界会话已保存');
-        }
-      }catch(e){ note('保存失败：'+ e.message); }
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
-    function maybeSaveSessionSilently(){
-      try{
-        const s = JSON.stringify({ conversations: state.conversations });
-        const bytes = new Blob([s]).size;
-        if (bytes <= MAX_BYTES){
-          state.persist.session.conversations = state.conversations;
-          state.persist.session.activeId = state.activeId;
-          state.persist.session.visibleCounts = state.visibleCounts;
-          state.persist.session.searchQuery = state.searchQuery;
-          state.persist.session.scrollY = 0; // 需求：从头看
-          state.persist.session.savedAt = Date.now();
-          savePersist(); updateSavedAt();
-        }
-      }catch{ /* 忽略 */ }
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, ch => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[ch] || ch));
     }
 
-    function restoreSession(){
-      const sess = state.persist.session;
-      if (!sess || (!sess.conversations && !sess.activeId)){ note('没有可恢复的小世界'); return; }
-      if (sess.conversations && sess.conversations.length){ state.conversations = sess.conversations; sortConversationsByTime(); }
-      state.activeId = sess.activeId || (state.conversations[0] && state.conversations[0].id) || null;
-      state.visibleCounts = sess.visibleCounts || {};
-      state.searchQuery = sess.searchQuery || '';
-      if (searchInput) searchInput.value = state.searchQuery;
+    if (fileInputHeader) fileInputHeader.addEventListener('change', handleFiles, false);
+    if (dirInputHeader) dirInputHeader.addEventListener('change', e => { processFilesArray(e.target.files || []); }, false);
+
+    window.addEventListener('load', () => {
+      if (state.persist.settings.bgImageDataUrl) {
+        document.body.style.backgroundImage = `url(${state.persist.settings.bgImageDataUrl})`;
+        document.body.style.backgroundSize = 'cover';
+      }
       renderConversationList();
       renderActiveConversation();
-      // 需求：从头开始，不强制定位 scrollY
-      note('已恢复上次的小世界');
-    }
 
-    // —— 存储工具 ——
-    function loadPersist(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw) return structuredClone(DEFAULTS);
-        const obj = JSON.parse(raw);
-        return {
-          settings: { ...DEFAULTS.settings, ...(obj.settings||{}) },
-          session: { ...DEFAULTS.session, ...(obj.session||{}) },
-        };
-      }catch(e){ return structuredClone(DEFAULTS); }
-    }
-    function savePersist(){
-      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.persist)); }
-      catch(e){ console.warn('保存失败', e); }
-    }
-    function maybeKeepDataUrl(dataUrl, label){
-      try{
-        const bytes = Math.ceil((dataUrl.length * 3) / 4); // 估算 base64 体积
-        if (bytes > 600 * 1024){ note(label + '较大，未写入本地缓存'); return ''; }
-        return dataUrl;
-      }catch{ return ''; }
-    }
-    function note(msg){
-      toast.textContent = msg; toast.classList.add('show');
-      clearTimeout(note._t); note._t = setTimeout(()=> toast.classList.remove('show'), 1500);
-    }
+      if (state.persist.session.lastActiveId) {
+        const conv = state.conversations.find(c => c.id === state.persist.session.lastActiveId);
+        if (conv) {
+          state.activeId = conv.id;
+          renderConversationList();
+          renderActiveConversation();
+        }
+      }
+    });
   </script>
 </body>
 </html>
