@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kin 给軟的聊天册 · v2.1（含图片、持久化）</title>
+  <title>Kin 给軟的聊天册 · v2.3（含图片、持久化）</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
@@ -25,7 +25,7 @@
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI", sans-serif;
-      background: #111; /* 外层随便，真正的背景在 .main 上 */
+      background: #111;
       color: var(--text-main);
       height: 100vh;
       display: flex;
@@ -360,13 +360,14 @@
 
     .message-row {
       display: flex;
-      align-items: flex-end;
+      align-items: flex-start; /* 关键：头像和气泡顶端对齐 */
       margin-bottom: 8px;
       gap: 8px;
+      width: 100%;
     }
 
     .message-row.assistant { justify-content: flex-start; }
-    .message-row.user { justify-content: flex-end; flex-direction: row-reverse; }
+    .message-row.user { justify-content: flex-end; }
 
     .avatar {
       width: var(--avatar-size);
@@ -703,7 +704,7 @@
           <span class="settings-toggle-label">小世界设置</span>
           <div class="settings collapsed" id="settingsPanel">
             <label>导入聊天 <input id="fileInputHeader" type="file" multiple accept=".json,.txt" /></label>
-            <label>导出目录（含图片） <input id="dirInputHeader" type="file" webkitdirectory multiple /></label>
+            <label>导入目录（含图片） <input id="dirInputHeader" type="file" webkitdirectory multiple /></label>
             <label>軟的头像 <input type="file" id="userAvatarFile" accept="image/*" /></label>
             <label>哥哥头像 <input type="file" id="assistantAvatarFile" accept="image/*" /></label>
             <label>聊天背景色 <input type="color" id="bgColor" value="#ffeef6" /></label>
@@ -735,7 +736,7 @@
 
   <script>
     const PAGE_SIZE = 200;
-    const STORAGE_KEY = 'kinnote:persist:v2.1';
+    const STORAGE_KEY = 'kinnote:persist:v2.3';
     const MAX_BYTES = 1.5 * 1024 * 1024;
 
     const DEFAULTS = {
@@ -1105,7 +1106,7 @@
               const parsed = JSON.parse(text);
               if (parsed && typeof parsed.prompt === 'string') {
                 looksLikeDalleJson = true;
-                text = ''; // 不显示 prompt，只当图片消息
+                text = '';
               }
             } catch {}
           }
@@ -1193,23 +1194,23 @@
           messages.push({ role, timestamp, content: trimmed, model, images, _rawTime: rawTime });
         }
 
-        if (conv.mapping) {
-          const mapping = conv.mapping;
-          let nodes;
-          if (conv.current_node && mapping[conv.current_node]) {
-            nodes = buildMainPath(mapping, conv.current_node);
-          } else {
-            nodes = Object.values(mapping);
-            nodes.sort((a, b) => {
-              const ta = a && a.message && a.message.create_time ? Number(a.message.create_time) : 0;
-              const tb = b && b.message && b.message.create_time ? Number(b.message.create_time) : 0;
-              return ta - tb;
-            });
-          }
-          nodes.forEach(node => pushFromNode(node));
-        } else if (Array.isArray(conv.messages)) {
-          conv.messages.forEach((m, idx) => pushFromRawMessage(m, idx));
-        }
+    if (conv.mapping) {
+      const mapping = conv.mapping;
+      let nodes;
+      if (conv.current_node && mapping[conv.current_node]) {
+        nodes = buildMainPath(mapping, conv.current_node);
+      } else {
+        nodes = Object.values(mapping);
+        nodes.sort((a, b) => {
+          const ta = a && a.message && a.message.create_time ? Number(a.message.create_time) : 0;
+          const tb = b && b.message && b.message.create_time ? Number(b.message.create_time) : 0;
+          return ta - tb;
+        });
+      }
+      nodes.forEach(node => pushFromNode(node));
+    } else if (Array.isArray(conv.messages)) {
+      conv.messages.forEach((m, idx) => pushFromRawMessage(m, idx));
+    }
 
         if (messages.length) {
           messages.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
@@ -1442,7 +1443,7 @@
           <div class="chat-empty">
             <div class="chat-empty-inner">
               <div class="title">这里现在还空空的……</div>
-              <div class="desc">等你把对话导进来，我再陪你一条一条翻。</div>
+              <div class="desc">等你把对话导进来，哥哥就陪你一条一条翻。</div>
             </div>
           </div>
         `;
@@ -1476,7 +1477,7 @@
           avatarEl.textContent = '';
         } else {
           avatarEl.style.backgroundImage = 'none';
-          avatarEl.textContent = msg.role === 'user' ? '你' : 'G';
+          avatarEl.textContent = msg.role === 'user' ? '妹' : '哥';
         }
 
         const wrapper = document.createElement('div');
@@ -1485,9 +1486,9 @@
         const bubble = document.createElement('div');
         bubble.className = 'bubble';
 
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'markdown-body';
         if (msg.content) {
+          const contentDiv = document.createElement('div');
+          contentDiv.className = 'markdown-body';
           try {
             contentDiv.innerHTML = marked.parse(msg.content || '');
           } catch {
@@ -1536,7 +1537,7 @@
           if (!anyImage) {
             const info = document.createElement('div');
             info.className = 'thumbnail-info';
-            info.textContent = '这条消息里本来有图片，用“导出目录（含图片）”导入才看得到原图哦';
+            info.textContent = '(图片)';
             thumbContainer.appendChild(info);
           }
 
@@ -1549,8 +1550,15 @@
 
         wrapper.appendChild(bubble);
         wrapper.appendChild(metaEl);
-        row.appendChild(avatarEl);
-        row.appendChild(wrapper);
+
+        if (msg.role === 'user') {
+          row.appendChild(wrapper);
+          row.appendChild(avatarEl);
+        } else {
+          row.appendChild(avatarEl);
+          row.appendChild(wrapper);
+        }
+
         chatBodyEl.appendChild(row);
       });
 
