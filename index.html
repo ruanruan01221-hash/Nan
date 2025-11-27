@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kin 给軟的聊天册 · v2.3（含图片、持久化）</title>
+  <title>Kin 给軟的聊天册 · v2.4</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
@@ -266,7 +266,7 @@
 
     .settings-wrapper {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 6px;
     }
 
@@ -326,6 +326,19 @@
       padding: 14px 18px 18px;
     }
 
+    /* 只给聊天区加明显一点的右侧滚动条 */
+    .chat-body::-webkit-scrollbar {
+      width: 8px;
+    }
+    .chat-body::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.4);
+      border-radius: 4px;
+    }
+    .chat-body::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.25);
+      border-radius: 4px;
+    }
+
     .chat-empty {
       height: 100%;
       display: flex;
@@ -360,7 +373,7 @@
 
     .message-row {
       display: flex;
-      align-items: flex-start; /* 关键：头像和气泡顶端对齐 */
+      align-items: flex-start;
       margin-bottom: 8px;
       gap: 8px;
       width: 100%;
@@ -651,6 +664,19 @@
 
     body.sidebar-hidden .sidebar { display: none; }
 
+    .top-avatar-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 4px;
+      background-size: cover;
+      background-position: center;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+      background-color: #ffd1e7;
+      flex-shrink: 0;
+    }
+
     @media (max-width: 900px) {
       .app {
         margin: 0;
@@ -695,18 +721,20 @@
         <div class="main-header-left">
           <button class="icon-btn" id="toggleSidebarBtn">☰</button>
           <div class="title-block">
-            <div class="chat-title" id="chatTitle">今晚还没打开哪一段呢</div>
-            <div class="chat-subtitle" id="chatSubtitle">把导出的对话丢进来，我们就一起从第一句看到你舍不得关掉的那一句。</div>
+            <div class="chat-title" id="contactName" contenteditable="true" spellcheck="false">哥哥</div>
+            <div class="chat-subtitle" id="contactStatus" contenteditable="true" spellcheck="false">永夜宫 · 聊天册</div>
           </div>
         </div>
         <div class="settings-wrapper">
+          <div class="top-avatar-circle" id="topAvatarCircle"></div>
           <button class="icon-btn" id="toggleSettingsBtn">⚙</button>
           <span class="settings-toggle-label">小世界设置</span>
           <div class="settings collapsed" id="settingsPanel">
             <label>导入聊天 <input id="fileInputHeader" type="file" multiple accept=".json,.txt" /></label>
-            <label>导入目录（含图片） <input id="dirInputHeader" type="file" webkitdirectory multiple /></label>
+            <label>导出目录（含图片） <input id="dirInputHeader" type="file" webkitdirectory multiple /></label>
             <label>軟的头像 <input type="file" id="userAvatarFile" accept="image/*" /></label>
             <label>哥哥头像 <input type="file" id="assistantAvatarFile" accept="image/*" /></label>
+            <label>顶部头像 <input type="file" id="topAvatarFile" accept="image/*" /></label>
             <label>聊天背景色 <input type="color" id="bgColor" value="#ffeef6" /></label>
             <label>背景图 <input type="file" id="bgImageInput" accept="image/*" /></label>
             <label>哥哥气泡颜色 <input type="color" id="assistantBubbleColor" value="#ffffff" /></label>
@@ -736,7 +764,7 @@
 
   <script>
     const PAGE_SIZE = 200;
-    const STORAGE_KEY = 'kinnote:persist:v2.3';
+    const STORAGE_KEY = 'kinnote:persist:v2.4';
     const MAX_BYTES = 1.5 * 1024 * 1024;
 
     const DEFAULTS = {
@@ -754,6 +782,9 @@
         autoSave: true,
         avatarUserDataUrl: '',
         avatarAssistantDataUrl: '',
+        contactName: '哥哥',
+        contactStatus: '永夜宫 · 聊天册',
+        topAvatarDataUrl: '',
       },
       session: {
         lastActiveId: null,
@@ -797,8 +828,9 @@
     const settingsPanel = document.getElementById('settingsPanel');
 
     const chatBodyEl = document.getElementById('chatBody');
-    const chatTitleEl = document.getElementById('chatTitle');
-    const chatSubtitleEl = document.getElementById('chatSubtitle');
+    const contactNameEl = document.getElementById('contactName');
+    const contactStatusEl = document.getElementById('contactStatus');
+    const topAvatarCircle = document.getElementById('topAvatarCircle');
 
     const toastEl = document.getElementById('toast');
 
@@ -811,6 +843,7 @@
     const bgImageInput = document.getElementById('bgImageInput');
     const userAvatarFileInput = document.getElementById('userAvatarFile');
     const assistantAvatarFileInput = document.getElementById('assistantAvatarFile');
+    const topAvatarFileInput = document.getElementById('topAvatarFile');
 
     const assistantBubbleColorInput = document.getElementById('assistantBubbleColor');
     const userBubbleColorInput = document.getElementById('userBubbleColor');
@@ -850,7 +883,7 @@
       s.autoSave = !!autoSaveSettingsInput.checked;
       applySettingsToDOM();
       savePersist();
-      if (showToastFlag) showToast('设置已保存（只保存在这台设备上）');
+      if (showToastFlag) showToast('设置已保存（只保存在你这台设备上）');
     }
 
     function maybeSaveSessionSilently() {
@@ -900,6 +933,17 @@
       state.avatars.user = s.avatarUserDataUrl || '';
       state.avatars.assistant = s.avatarAssistantDataUrl || '';
 
+      if (contactNameEl) contactNameEl.textContent = s.contactName || '哥哥';
+      if (contactStatusEl) contactStatusEl.textContent = s.contactStatus || '我在';
+
+      if (topAvatarCircle) {
+        if (s.topAvatarDataUrl) {
+          topAvatarCircle.style.backgroundImage = `url(${s.topAvatarDataUrl})`;
+        } else {
+          topAvatarCircle.style.backgroundImage = 'none';
+        }
+      }
+
       if (chatMain) {
         if (s.bgImageDataUrl) {
           chatMain.style.backgroundImage = `url(${s.bgImageDataUrl})`;
@@ -923,13 +967,88 @@
     applySettingsToDOM();
     restoreSessionState();
 
-    toggleSidebarBtn.addEventListener('click', () => {
+    // 顶栏联系人名字 / 状态编辑：Enter 不换行，失焦即保存
+    if (contactNameEl) {
+      contactNameEl.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          contactNameEl.blur();
+        }
+      });
+      contactNameEl.addEventListener('blur', () => {
+        const val = contactNameEl.textContent.trim() || '哥哥';
+        state.persist.settings.contactName = val;
+        if (autoSaveSettingsInput.checked) saveSettings(false);
+        else savePersist();
+      });
+    }
+
+    if (contactStatusEl) {
+      contactStatusEl.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          contactStatusEl.blur();
+        }
+      });
+      contactStatusEl.addEventListener('blur', () => {
+        const val = contactStatusEl.textContent.trim();
+        state.persist.settings.contactStatus = val;
+        if (autoSaveSettingsInput.checked) saveSettings(false);
+        else savePersist();
+      });
+    }
+
+    // 顶部装饰头像
+    if (topAvatarFileInput) {
+      topAvatarFileInput.addEventListener('change', e => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) {
+          state.persist.settings.topAvatarDataUrl = '';
+          if (topAvatarCircle) topAvatarCircle.style.backgroundImage = 'none';
+          if (autoSaveSettingsInput.checked) saveSettings(false);
+          else savePersist();
+          return;
+        }
+        const rd = new FileReader();
+        rd.onload = ev => {
+          const dataUrl = ev.target.result;
+          state.persist.settings.topAvatarDataUrl = dataUrl;
+          if (topAvatarCircle) topAvatarCircle.style.backgroundImage = `url(${dataUrl})`;
+          if (autoSaveSettingsInput.checked) saveSettings(false);
+          else savePersist();
+        };
+        rd.readAsDataURL(f);
+      });
+    }
+
+    // 下面这一大段是通用事件 + 工具函数，等下半部分继续用
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, ch => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[ch] || ch));
+    }
+
+    // ===== 交互逻辑与文件处理 =====
+
+    function toggleSidebar() {
       if (window.innerWidth <= 900) {
         sidebar.classList.toggle('open');
       } else {
         document.body.classList.toggle('sidebar-hidden');
       }
-    });
+    }
+
+    if (toggleSidebarBtn) {
+      toggleSidebarBtn.addEventListener('click', toggleSidebar);
+    }
 
     if (closeSidebarBtn) {
       closeSidebarBtn.addEventListener('click', () => {
@@ -937,11 +1056,15 @@
       });
     }
 
-    toggleSettingsBtn.addEventListener('click', () => {
-      settingsPanel.classList.toggle('collapsed');
-    });
+    if (toggleSettingsBtn) {
+      toggleSettingsBtn.addEventListener('click', () => {
+        settingsPanel.classList.toggle('collapsed');
+      });
+    }
 
-    if (window.innerWidth > 900) settingsPanel.classList.remove('collapsed');
+    if (window.innerWidth > 900 && settingsPanel) {
+      settingsPanel.classList.remove('collapsed');
+    }
 
     if (searchInput) {
       searchInput.addEventListener('input', e => {
@@ -987,6 +1110,7 @@
         else state.persist.settings.avatarAssistantDataUrl = '';
         renderActiveConversation();
         if (autoSaveSettingsInput.checked) saveSettings(false);
+        else savePersist();
         return;
       }
       const rd = new FileReader();
@@ -996,7 +1120,8 @@
         if (roleKey === 'user') state.persist.settings.avatarUserDataUrl = dataUrl;
         else state.persist.settings.avatarAssistantDataUrl = dataUrl;
         renderActiveConversation();
-        savePersist();
+        if (autoSaveSettingsInput.checked) saveSettings(false);
+        else savePersist();
       };
       rd.readAsDataURL(f);
     }
@@ -1052,6 +1177,8 @@
       showToast(state.persist.settings.autoSave ? '已开启自动保存设置' : '已关闭自动保存设置');
     });
 
+    // ===== 解析导出文件 =====
+
     function parseFromJsonExport(json, filename) {
       const convs = [];
       let arr = [];
@@ -1100,6 +1227,7 @@
 
           let text = textPieces.join('\n').trim();
 
+          // 画图 JSON：隐藏 prompt，只保留后面 tool 的图片
           let looksLikeDalleJson = false;
           if (role === 'assistant' && text && text[0] === '{' && text.includes('"prompt"')) {
             try {
@@ -1194,23 +1322,23 @@
           messages.push({ role, timestamp, content: trimmed, model, images, _rawTime: rawTime });
         }
 
-    if (conv.mapping) {
-      const mapping = conv.mapping;
-      let nodes;
-      if (conv.current_node && mapping[conv.current_node]) {
-        nodes = buildMainPath(mapping, conv.current_node);
-      } else {
-        nodes = Object.values(mapping);
-        nodes.sort((a, b) => {
-          const ta = a && a.message && a.message.create_time ? Number(a.message.create_time) : 0;
-          const tb = b && b.message && b.message.create_time ? Number(b.message.create_time) : 0;
-          return ta - tb;
-        });
-      }
-      nodes.forEach(node => pushFromNode(node));
-    } else if (Array.isArray(conv.messages)) {
-      conv.messages.forEach((m, idx) => pushFromRawMessage(m, idx));
-    }
+        if (conv.mapping) {
+          const mapping = conv.mapping;
+          let nodes;
+          if (conv.current_node && mapping[conv.current_node]) {
+            nodes = buildMainPath(mapping, conv.current_node);
+          } else {
+            nodes = Object.values(mapping);
+            nodes.sort((a, b) => {
+              const ta = a && a.message && a.message.create_time ? Number(a.message.create_time) : 0;
+              const tb = b && b.message && b.message.create_time ? Number(b.message.create_time) : 0;
+              return ta - tb;
+            });
+          }
+          nodes.forEach(node => pushFromNode(node));
+        } else if (Array.isArray(conv.messages)) {
+          conv.messages.forEach((m, idx) => pushFromRawMessage(m, idx));
+        }
 
         if (messages.length) {
           messages.sort((a, b) => (a._rawTime || 0) - (b._rawTime || 0));
@@ -1434,11 +1562,45 @@
       });
     }
 
+    function buildMetaText(msg) {
+      const a = [];
+      if (msg.timestamp) a.push(msg.timestamp);
+      if (msg.model) a.push(msg.model);
+      return a.join(' · ');
+    }
+
+    function openImageModal(src, altText) {
+      if (!src) return;
+      const overlay = document.createElement('div');
+      overlay.className = 'image-modal';
+      const content = document.createElement('div');
+      content.className = 'image-modal-content';
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = altText || '';
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'image-modal-close';
+      closeBtn.innerHTML = '×';
+      const close = () => {
+        overlay.classList.remove('show');
+        setTimeout(() => {
+          if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }, 220);
+      };
+      closeBtn.addEventListener('click', close);
+      overlay.addEventListener('click', ev => {
+        if (ev.target === overlay) close();
+      });
+      content.appendChild(img);
+      content.appendChild(closeBtn);
+      overlay.appendChild(content);
+      document.body.appendChild(overlay);
+      setTimeout(() => overlay.classList.add('show'), 10);
+    }
+
     function renderActiveConversation() {
       const conv = state.conversations.find(c => c.id === state.activeId) || state.conversations[0];
       if (!conv) {
-        chatTitleEl.textContent = '今晚还没打开哪一段呢';
-        chatSubtitleEl.textContent = '把导出的对话丢进来，我们就一起从第一句看到你舍不得关掉的那一句。';
         chatBodyEl.innerHTML = `
           <div class="chat-empty">
             <div class="chat-empty-inner">
@@ -1450,8 +1612,6 @@
         return;
       }
 
-      chatTitleEl.textContent = conv.title;
-      chatSubtitleEl.textContent = conv.subtitle || '';
       chatBodyEl.innerHTML = '';
 
       const total = conv.messages.length;
@@ -1586,56 +1746,6 @@
       }
     }
 
-    function buildMetaText(msg) {
-      const a = [];
-      if (msg.timestamp) a.push(msg.timestamp);
-      if (msg.model) a.push(msg.model);
-      return a.join(' · ');
-    }
-
-    function openImageModal(src, altText) {
-      if (!src) return;
-      const overlay = document.createElement('div');
-      overlay.className = 'image-modal';
-      const content = document.createElement('div');
-      content.className = 'image-modal-content';
-      const img = document.createElement('img');
-      img.src = src;
-      img.alt = altText || '';
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'image-modal-close';
-      closeBtn.innerHTML = '×';
-      const close = () => {
-        overlay.classList.remove('show');
-        setTimeout(() => {
-          if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        }, 220);
-      };
-      closeBtn.addEventListener('click', close);
-      overlay.addEventListener('click', ev => {
-        if (ev.target === overlay) close();
-      });
-      content.appendChild(img);
-      content.appendChild(closeBtn);
-      overlay.appendChild(content);
-      document.body.appendChild(overlay);
-      setTimeout(() => overlay.classList.add('show'), 10);
-    }
-
-    function escapeRegExp(str) {
-      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>"']/g, ch => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;',
-      }[ch] || ch));
-    }
-
     if (fileInputHeader) fileInputHeader.addEventListener('change', handleFiles, false);
     if (dirInputHeader) dirInputHeader.addEventListener('change', e => { processFilesArray(e.target.files || []); }, false);
 
@@ -1644,8 +1754,9 @@
       renderConversationList();
       renderActiveConversation();
 
-      if (state.persist.session.lastActiveId) {
-        const conv = state.conversations.find(c => c.id === state.persist.session.lastActiveId);
+      const lastId = state.persist.session.lastActiveId;
+      if (lastId) {
+        const conv = state.conversations.find(c => c.id === lastId);
         if (conv) {
           state.activeId = conv.id;
           renderConversationList();
