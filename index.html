@@ -439,7 +439,7 @@
       border-color: var(--user-border-color);
     }
 
-    /* 左侧尾巴：双层三角形，外层边框，内层背景 */
+    /* 小尾巴 */
     body.show-tails .message-row.assistant .bubble::before,
     body.show-tails .message-row.assistant .bubble::after {
       content: '';
@@ -449,20 +449,16 @@
       height: 0;
       border-style: solid;
     }
-
     body.show-tails .message-row.assistant .bubble::before {
       left: -10px;
       border-width: 8px 10px 8px 0;
       border-color: transparent var(--assistant-border-color) transparent transparent;
     }
-
     body.show-tails .message-row.assistant .bubble::after {
       left: -9px;
       border-width: 8px 10px 8px 0;
       border-color: transparent var(--assistant-bubble-color) transparent transparent;
     }
-
-    /* 右侧尾巴：同理双层三角形 */
     body.show-tails .message-row.user .bubble::before,
     body.show-tails .message-row.user .bubble::after {
       content: '';
@@ -472,40 +468,21 @@
       height: 0;
       border-style: solid;
     }
-
     body.show-tails .message-row.user .bubble::before {
       right: -10px;
       border-width: 8px 0 8px 10px;
       border-color: transparent transparent transparent var(--user-border-color);
     }
-
     body.show-tails .message-row.user .bubble::after {
       right: -9px;
       border-width: 8px 0 8px 10px;
       border-color: transparent transparent transparent var(--user-bubble-color);
     }
 
-    .thumbnails-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-      margin-bottom: 4px;
-    }
-
-    .message-row.user .thumbnails-container {
-      justify-content: flex-end;
-      margin-left: auto;
-    }
-
-    .thumbnails-container.image-only {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .message-row.user .thumbnails-container.image-only {
-      align-items: flex-end;
-    }
+    .thumbnails-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; margin-bottom: 4px; }
+    .message-row.user .thumbnails-container { justify-content: flex-end; margin-left: auto; }
+    .thumbnails-container.image-only { flex-direction: column; align-items: flex-start; }
+    .message-row.user .thumbnails-container.image-only { align-items: flex-end; }
 
     .thumbnail {
       width: 80px;
@@ -517,144 +494,32 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.12);
       transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     }
+    .thumbnails-container.image-only .thumbnail { width: 260px; max-width: 100%; height: auto; border-radius: 18px; }
+    .thumbnail:hover { transform: scale(1.04); border-color: var(--accent-chip); box-shadow: 0 4px 12px rgba(255,148,199,0.45); }
 
-    .thumbnails-container.image-only .thumbnail {
-      width: 260px;
-      max-width: 100%;
-      height: auto;
-      border-radius: 18px;
-    }
+    .image-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+    .image-modal.show { opacity: 1; pointer-events: auto; }
+    .image-modal-content { position: relative; max-width: min(90vw, 900px); max-height: 90vh; border-radius: 14px; overflow: hidden; box-shadow: 0 24px 48px rgba(0,0,0,0.5); background: #111; }
+    .image-modal-content img { display: block; max-width: 100%; max-height: 100%; }
+    .image-modal-close { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 999px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; background: rgba(255,255,255,0.9); color: #333; box-shadow: 0 4px 10px rgba(0,0,0,0.35); }
 
-    .thumbnail:hover {
-      transform: scale(1.04);
-      border-color: var(--accent-chip);
-      box-shadow: 0 4px 12px rgba(255,148,199,0.45);
-    }
-
-    .image-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .25s ease;
-    }
-
-    .image-modal.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .image-modal-content {
-      position: relative;
-      max-width: min(90vw, 900px);
-      max-height: 90vh;
-      border-radius: 14px;
-      overflow: hidden;
-      box-shadow: 0 24px 48px rgba(0,0,0,0.5);
-      background: #111;
-    }
-
-    .image-modal-content img {
-      display: block;
-      max-width: 100%;
-      max-height: 100%;
-    }
-
-    .image-modal-close {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      background: rgba(255,255,255,0.9);
-      color: #333;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
-    }
-
-    .thumbnail-info {
-      font-size: 11px;
-      color: #b59ab0;
-      margin-top: 4px;
-    }
+    .thumbnail-info { font-size: 11px; color: #b59ab0; margin-top: 4px; }
 
     .bubble .markdown-body p { margin: 0 0 4px; }
     .bubble .markdown-body p:last-child { margin-bottom: 0; }
-    .bubble .markdown-body code {
-      background: rgba(0, 0, 0, 0.04);
-      padding: 1px 4px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-
-    .bubble .markdown-body pre {
-      background: #1e1e1e;
-      color: #f4f4f4;
-      padding: 8px 10px;
-      border-radius: 10px;
-      overflow-x: auto;
-      font-size: 12px;
-      max-width: 100%;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-
-    .bubble .markdown-body ul,
-    .bubble .markdown-body ol {
-      margin: 0 0 4px 18px;
-      padding: 0;
-    }
-
-    .bubble .markdown-body h1,
-    .bubble .markdown-body h2,
-    .bubble .markdown-body h3 {
-      margin: 4px 0;
-      font-size: 15px;
-    }
-
-    .bubble .markdown-body a {
-      color: var(--accent-chip);
-      text-decoration: none;
-      border-bottom: 1px dashed var(--accent-chip);
-    }
-
+    .bubble .markdown-body code { background: rgba(0, 0, 0, 0.04); padding: 1px 4px; border-radius: 4px; font-size: 12px; }
+    .bubble .markdown-body pre { background: #1e1e1e; color: #f4f4f4; padding: 8px 10px; border-radius: 10px; overflow-x: auto; font-size: 12px; max-width: 100%; white-space: pre-wrap; word-break: break-all; }
+    .bubble .markdown-body ul, .bubble .markdown-body ol { margin: 0 0 4px 18px; padding: 0; }
+    .bubble .markdown-body h1, .bubble .markdown-body h2, .bubble .markdown-body h3 { margin: 4px 0; font-size: 15px; }
+    .bubble .markdown-body a { color: var(--accent-chip); text-decoration: none; border-bottom: 1px dashed var(--accent-chip); }
     .bubble .markdown-body a:hover { text-decoration: underline; }
 
-    .meta-line {
-      margin-top: 2px;
-      font-size: 11px;
-      color: var(--meta-text);
-    }
-
+    .meta-line { margin-top: 2px; font-size: 11px; color: var(--meta-text); }
     .message-row.user .meta-line { text-align: right; }
 
-    mark {
-      background: #ffe07f;
-      color: inherit;
-      padding: 0 1px;
-      border-radius: 2px;
-    }
+    mark { background: #ffe07f; color: inherit; padding: 0 1px; border-radius: 2px; }
 
-    .main-footer {
-      padding: 6px 14px 9px;
-      font-size: 11px;
-      color: var(--meta-text);
-      border-top: none;
-      text-align: right;
-      background: transparent;
-    }
-
+    .main-footer { padding: 6px 14px 9px; font-size: 11px; color: var(--meta-text); border-top: none; text-align: right; background: transparent; }
     .main-footer span { color: var(--accent-chip); }
 
     .toast {
@@ -673,14 +538,9 @@
       font-size: 12px;
       z-index: 999;
     }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(-6px);
-    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
 
     .hide-avatars .avatar { display: none; }
-
     body.sidebar-hidden .sidebar { display: none; }
 
     .top-avatar-circle {
@@ -697,28 +557,10 @@
     }
 
     @media (max-width: 900px) {
-      .app {
-        margin: 0;
-        border-radius: 0;
-        width: 100%;
-        height: 100vh;
-      }
-
-      .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: min(260px, 70vw);
-        transform: translateX(-100%);
-        transition: transform .25s ease;
-        box-shadow: 6px 0 18px rgba(0,0,0,0.15);
-      }
-
+      .app { margin: 0; border-radius: 0; width: 100%; height: 100vh; }
+      .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: min(260px, 70vw); transform: translateX(-100%); transition: transform .25s ease; box-shadow: 6px 0 18px rgba(0,0,0,0.15); }
       .sidebar.open { transform: translateX(0); }
-
       .sidebar-close-btn { display: flex; }
-
       .bubble { font-size: var(--bubble-font-size); }
     }
   </style>
@@ -785,9 +627,9 @@
 
   <script>
     const PAGE_SIZE = 200;
-    const STORAGE_KEY = 'kinnote:persist:v2.20'; // 升级版本，避免旧结构干扰
+    const STORAGE_KEY = 'kinnote:persist:v2.20';
 
-    // ===== IndexedDB 轻量 KV 封装（存放大图/头像） =====
+    // ===== IndexedDB KV（存大图/头像） =====
     const IDB_NAME = 'kinnote-store';
     const IDB_STORE = 'kv';
     let IDB_SUPPORTED = !!window.indexedDB;
@@ -801,7 +643,6 @@
         req.onerror = () => reject(req.error || new Error('open idb error'));
       });
     }
-
     async function idbGet(key) {
       const db = await idbOpen();
       return new Promise((resolve, reject) => {
@@ -810,7 +651,6 @@
         tx.onerror = () => reject(tx.error);
       });
     }
-
     async function idbSet(key, val) {
       const db = await idbOpen();
       return new Promise((resolve, reject) => {
@@ -819,7 +659,6 @@
         tx.onerror = () => reject(tx.error);
       });
     }
-
     function newAssetKey(prefix) {
       return prefix + ':' + Date.now().toString(36) + ':' + Math.random().toString(36).slice(2,7);
     }
@@ -828,7 +667,7 @@
     const DEFAULTS = {
       settings: {
         chatBgColor: '#ffeef6',
-        // 旧版字段（dataURL）会在迁移中清理
+        // 旧版字段（dataURL）→ 首次启动自动迁移进 IndexedDB
         avatarUserDataUrl: '',
         avatarAssistantDataUrl: '',
         topAvatarDataUrl: '',
@@ -883,7 +722,7 @@
 
     let assetFiles = [];
 
-    // marked 可能加载失败（离线），做容错
+    // marked 容错
     try { if (window.marked) marked.setOptions({ breaks: true, gfm: true }); } catch {}
 
     const sidebar = document.getElementById('sidebar');
@@ -923,20 +762,15 @@
     const toggleAvatarsInput = document.getElementById('toggleAvatars');
     const autoSaveSettingsInput = document.getElementById('autoSaveSettings');
 
-    function showToast(msg) {
-      toastEl.textContent = msg;
-      toastEl.classList.add('show');
-      setTimeout(() => { toastEl.classList.remove('show'); }, 2000);
-    }
+    function showToast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, 2000); }
 
     function savePersist() {
       try {
-        // 仅保存轻量字段，避免 dataURL 爆仓
         const payload = {
           settings: { ...state.persist.settings },
           session: { ...state.persist.session }
         };
-        // 确保不把 dataURL 写进 localStorage
+        // 不把 dataURL 写进 localStorage
         delete payload.settings.avatarUserDataUrl;
         delete payload.settings.avatarAssistantDataUrl;
         delete payload.settings.topAvatarDataUrl;
@@ -950,37 +784,18 @@
 
     function lightenColor(hex, amount) {
       if (!hex) return '#ffffff';
-      let h = hex.trim();
-      if (h[0] === '#') h = h.slice(1);
-      if (h.length === 3) {
-        h = h.split('').map(c => c + c).join('');
-      }
-      const num = parseInt(h, 16);
-      if (Number.isNaN(num)) return '#ffffff';
-      let r = (num >> 16) & 255;
-      let g = (num >> 8) & 255;
-      let b = num & 255;
-      r = Math.round(r + (255 - r) * amount);
-      g = Math.round(g + (255 - g) * amount);
-      b = Math.round(b + (255 - b) * amount);
+      let h = hex.trim(); if (h[0] === '#') h = h.slice(1); if (h.length === 3) h = h.split('').map(c => c + c).join('');
+      const num = parseInt(h, 16); if (Number.isNaN(num)) return '#ffffff';
+      let r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
+      r = Math.round(r + (255 - r) * amount); g = Math.round(g + (255 - g) * amount); b = Math.round(b + (255 - b) * amount);
       return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
-
     function darkenColor(hex, amount) {
       if (!hex) return '#333333';
-      let h = hex.trim();
-      if (h[0] === '#') h = h.slice(1);
-      if (h.length === 3) {
-        h = h.split('').map(c => c + c).join('');
-      }
-      const num = parseInt(h, 16);
-      if (Number.isNaN(num)) return '#333333';
-      let r = (num >> 16) & 255;
-      let g = (num >> 8) & 255;
-      let b = num & 255;
-      r = Math.round(r * (1 - amount));
-      g = Math.round(g * (1 - amount));
-      b = Math.round(b * (1 - amount));
+      let h = hex.trim(); if (h[0] === '#') h = h.slice(1); if (h.length === 3) h = h.split('').map(c => c + c).join('');
+      const num = parseInt(h, 16); if (Number.isNaN(num)) return '#333333';
+      let r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
+      r = Math.round(r * (1 - amount)); g = Math.round(g * (1 - amount)); b = Math.round(b * (1 - amount));
       return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
 
@@ -1018,6 +833,7 @@
       document.documentElement.style.setProperty('--bubble-border', userBorder);
       document.documentElement.style.setProperty('--sidebar-input-bg', sidebarInputBg);
 
+      // 渐变只作用于侧栏/顶部，不触碰 chatMain 的 backgroundImage
       if (sidebar) {
         sidebar.style.background = `linear-gradient(165deg, ${soft} 0%, ${softer} 46%, #ffffff 100%)`;
       }
@@ -1026,11 +842,8 @@
         mainHeaderEl.style.background = `linear-gradient(90deg, ${soft} 0%, #ffffff 100%)`;
       }
 
-      if (s.showTails) document.body.classList.add('show-tails');
-      else document.body.classList.remove('show-tails');
-
-      if (s.hideAvatars) document.body.classList.add('hide-avatars');
-      else document.body.classList.remove('hide-avatars');
+      if (s.showTails) document.body.classList.add('show-tails'); else document.body.classList.remove('show-tails');
+      if (s.hideAvatars) document.body.classList.add('hide-avatars'); else document.body.classList.remove('hide-avatars');
 
       // 控件状态回填
       bgColorInput.value = s.chatBgColor;
@@ -1048,9 +861,9 @@
       if (contactNameEl) contactNameEl.textContent = s.contactName || '🌱哥哥૮₍◜ෆ◝.₎ა';
       if (contactStatusEl) contactStatusEl.textContent = s.contactStatus || '已成功与你建立连接✓';
 
-      // 背景先用纯色，图像异步加载
+      // 只设置背景色，不清空背景图
       if (chatMain) {
-        chatMain.style.background = s.chatBgColor || '#ffeef6';
+        chatMain.style.backgroundColor = s.chatBgColor || '#ffeef6';
       }
     }
 
@@ -1063,7 +876,7 @@
 
     async function migratePersistIfNeeded() {
       const s = state.persist.settings;
-      if (!IDB_SUPPORTED) return; // 无法迁移，保持原样
+      if (!IDB_SUPPORTED) return;
 
       const pairs = [
         ['avatarUserDataUrl', 'avatarUserKey', 'asset:user'],
@@ -1079,17 +892,14 @@
             const key = newAssetKey(prefix);
             await idbSet(key, s[oldField]);
             s[keyField] = key;
-            s[oldField] = ''; // 清空旧字段，防止 localStorage 爆仓
+            s[oldField] = '';
             migrated++;
           } catch (e) {
             console.warn('迁移失败', oldField, e);
           }
         }
       }
-      if (migrated) {
-        savePersist();
-        showToast('已将大图片迁移到本地数据库，更稳了');
-      }
+      if (migrated) { savePersist(); showToast('已将大图片迁到本地数据库'); }
     }
 
     async function applyAssetsFromStorage() {
@@ -1099,23 +909,14 @@
       state.avatars.user = '';
       state.avatars.assistant = '';
       if (IDB_SUPPORTED) {
-        if (s.avatarUserKey) {
-          try { state.avatars.user = await idbGet(s.avatarUserKey) || ''; } catch {}
-        }
-        if (s.avatarAssistantKey) {
-          try { state.avatars.assistant = await idbGet(s.avatarAssistantKey) || ''; } catch {}
-        }
+        if (s.avatarUserKey) { try { state.avatars.user = await idbGet(s.avatarUserKey) || ''; } catch {} }
+        if (s.avatarAssistantKey) { try { state.avatars.assistant = await idbGet(s.avatarAssistantKey) || ''; } catch {} }
       }
-      // 顶部圆头像
       if (topAvatarCircle) {
         if (IDB_SUPPORTED && s.topAvatarKey) {
-          try {
-            const d = await idbGet(s.topAvatarKey);
-            topAvatarCircle.style.backgroundImage = d ? `url(${d})` : 'none';
-          } catch { topAvatarCircle.style.backgroundImage = 'none'; }
-        } else {
-          topAvatarCircle.style.backgroundImage = 'none';
-        }
+          try { const d = await idbGet(s.topAvatarKey); topAvatarCircle.style.backgroundImage = d ? `url(${d})` : 'none'; }
+          catch { topAvatarCircle.style.backgroundImage = 'none'; }
+        } else { topAvatarCircle.style.backgroundImage = 'none'; }
       }
       // 背景图
       if (chatMain) {
@@ -1151,15 +952,12 @@
             let w = img.naturalWidth || img.width;
             let h = img.naturalHeight || img.height;
             const scale = Math.min(1, maxSide / Math.max(w, h));
-            const nw = Math.round(w * scale);
-            const nh = Math.round(h * scale);
-            canvas.width = nw;
-            canvas.height = nh;
+            const nw = Math.round(w * scale), nh = Math.round(h * scale);
+            canvas.width = nw; canvas.height = nh;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, nw, nh);
             let dataUrl;
-            try { dataUrl = canvas.toDataURL('image/jpeg', quality); }
-            catch { dataUrl = canvas.toDataURL(); }
+            try { dataUrl = canvas.toDataURL('image/jpeg', quality); } catch { dataUrl = canvas.toDataURL(); }
             resolve(dataUrl);
           };
           img.onerror = () => reject(new Error('图片读取失败'));
@@ -1172,11 +970,8 @@
 
     // ===== 事件：基本交互 =====
     function toggleSidebar() {
-      if (window.innerWidth <= 900) {
-        sidebar.classList.toggle('open');
-      } else {
-        document.body.classList.toggle('sidebar-hidden');
-      }
+      if (window.innerWidth <= 900) { sidebar.classList.toggle('open'); }
+      else { document.body.classList.toggle('sidebar-hidden'); }
     }
 
     if (toggleSidebarBtn) toggleSidebarBtn.addEventListener('click', toggleSidebar);
@@ -1220,82 +1015,63 @@
       applySettingsToDOM();
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
-
     assistantBubbleColorInput.addEventListener('input', e => {
       document.documentElement.style.setProperty('--assistant-bubble-color', e.target.value);
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
-
     userBubbleColorInput.addEventListener('input', e => {
       document.documentElement.style.setProperty('--user-bubble-color', e.target.value);
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
-
     bubbleTextColorInput.addEventListener('input', e => {
       document.documentElement.style.setProperty('--bubble-text-color', e.target.value);
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
-
     bubbleOpacityInput.addEventListener('input', e => {
       document.documentElement.style.setProperty('--bubble-opacity', e.target.value);
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
-
     fontSizeRangeInput.addEventListener('input', e => {
       document.documentElement.style.setProperty('--bubble-font-size', e.target.value + 'px');
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
-
     avatarSizeRangeInput.addEventListener('input', e => {
       document.documentElement.style.setProperty('--avatar-size', e.target.value + 'px');
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
-
     bubbleRadiusRangeInput.addEventListener('input', e => {
       document.documentElement.style.setProperty('--bubble-radius', e.target.value + 'px');
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
-
     toggleTailsInput.addEventListener('change', () => {
-      if (toggleTailsInput.checked) document.body.classList.add('show-tails');
-      else document.body.classList.remove('show-tails');
+      if (toggleTailsInput.checked) document.body.classList.add('show-tails'); else document.body.classList.remove('show-tails');
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
-
     toggleAvatarsInput.addEventListener('change', () => {
-      if (toggleAvatarsInput.checked) document.body.classList.add('hide-avatars');
-      else document.body.classList.remove('hide-avatars');
+      if (toggleAvatarsInput.checked) document.body.classList.add('hide-avatars'); else document.body.classList.remove('hide-avatars');
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
-
     autoSaveSettingsInput.addEventListener('change', () => {
       state.persist.settings.autoSave = autoSaveSettingsInput.checked;
       savePersist();
       showToast(state.persist.settings.autoSave ? '已开启自动保存设置' : '已关闭自动保存设置');
     });
 
-    // 顶部联系人备注编辑
+    // 顶部联系人备注
     if (contactNameEl) {
-      contactNameEl.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); contactNameEl.blur(); }
-      });
+      contactNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); contactNameEl.blur(); } });
       contactNameEl.addEventListener('blur', () => {
         const val = contactNameEl.textContent.trim() || '哥哥';
         state.persist.settings.contactName = val;
-        if (autoSaveSettingsInput.checked) saveSettings(false);
-        else savePersist();
+        if (autoSaveSettingsInput.checked) saveSettings(false); else savePersist();
       });
     }
-
     if (contactStatusEl) {
-      contactStatusEl.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); contactStatusEl.blur(); }
-      });
+      contactStatusEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); contactStatusEl.blur(); } });
       contactStatusEl.addEventListener('blur', () => {
         const val = contactStatusEl.textContent.trim();
         state.persist.settings.contactStatus = val;
-        if (autoSaveSettingsInput.checked) saveSettings(false);
-        else savePersist();
+        if (autoSaveSettingsInput.checked) saveSettings(false); else savePersist();
       });
     }
 
@@ -1309,14 +1085,10 @@
           const key = newAssetKey('asset:top');
           if (IDB_SUPPORTED) { await idbSet(key, d); state.persist.settings.topAvatarKey = key; }
           if (topAvatarCircle) topAvatarCircle.style.backgroundImage = `url(${d})`;
-          if (autoSaveSettingsInput.checked) saveSettings(false);
-          else savePersist();
-        } catch (err) {
-          console.warn(err); showToast('头像保存失败');
-        }
+          if (autoSaveSettingsInput.checked) saveSettings(false); else savePersist();
+        } catch (err) { console.warn(err); showToast('头像保存失败'); }
       });
     }
-
     function bindAvatarInput(input, roleKey, keyField, prefix) {
       input.addEventListener('change', async () => {
         const f = input.files && input.files[0];
@@ -1324,8 +1096,7 @@
           state.avatars[roleKey] = '';
           state.persist.settings[keyField] = '';
           renderActiveConversation();
-          if (autoSaveSettingsInput.checked) saveSettings(false);
-          else savePersist();
+          if (autoSaveSettingsInput.checked) saveSettings(false); else savePersist();
           return;
         }
         try {
@@ -1334,14 +1105,10 @@
           if (IDB_SUPPORTED) { await idbSet(key, d); state.persist.settings[keyField] = key; }
           state.avatars[roleKey] = d;
           renderActiveConversation();
-          if (autoSaveSettingsInput.checked) saveSettings(false);
-          else savePersist();
-        } catch (err) {
-          console.warn(err); showToast('保存头像失败');
-        }
+          if (autoSaveSettingsInput.checked) saveSettings(false); else savePersist();
+        } catch (err) { console.warn(err); showToast('保存头像失败'); }
       });
     }
-
     bindAvatarInput(userAvatarFileInput, 'user', 'avatarUserKey', 'asset:user');
     bindAvatarInput(assistantAvatarFileInput, 'assistant', 'avatarAssistantKey', 'asset:assistant');
 
@@ -1351,8 +1118,7 @@
         if (!f) {
           state.persist.settings.bgImageKey = '';
           if (chatMain) { chatMain.style.backgroundImage = 'none'; }
-          if (autoSaveSettingsInput.checked) saveSettings(false);
-          else savePersist();
+          if (autoSaveSettingsInput.checked) saveSettings(false); else savePersist();
           return;
         }
         try {
@@ -1364,11 +1130,8 @@
             chatMain.style.backgroundSize = 'cover';
             chatMain.style.backgroundPosition = 'center';
           }
-          if (autoSaveSettingsInput.checked) saveSettings(false);
-          else savePersist();
-        } catch (err) {
-          console.warn(err); showToast('背景图保存失败');
-        }
+          if (autoSaveSettingsInput.checked) saveSettings(false); else savePersist();
+        } catch (err) { console.warn(err); showToast('背景图保存失败'); }
       });
     }
 
@@ -1383,14 +1146,8 @@
       if (t.startsWith('tell me\n')) return true;
       return false;
     }
-
-    function escapeRegExp(str) {
-      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch] || ch));
-    }
+    function escapeRegExp(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    function escapeHtml(str) { return String(str).replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch] || ch)); }
 
     if (fileInputHeader) fileInputHeader.addEventListener('change', e => handleFiles(e.target.files), false);
     if (dirInputHeader) dirInputHeader.addEventListener('change', e => { processFilesArray(e.target.files || []); }, false);
@@ -1405,10 +1162,7 @@
       if (!files.length) return;
 
       const convFiles = files.filter(f => /\.(json|txt)$/i.test(f.name || ''));
-      if (!convFiles.length) {
-        showToast('没有找到 JSON 或 TXT 对话文件');
-        return;
-      }
+      if (!convFiles.length) { showToast('没有找到 JSON 或 TXT 对话文件'); return; }
 
       assetFiles = files;
 
@@ -1664,51 +1418,27 @@
           const role = m[2] === 'user' ? 'user' : 'assistant';
           const content = m[3];
           if (shouldHideSystemLikeUserMessage(role, content)) return;
-          current = {
-            timestamp: m[1],
-            role,
-            content,
-            model: '',
-            _rawTime: idx,
-            images: []
-          };
+          current = { timestamp: m[1], role, content, model: '', _rawTime: idx, images: [] };
         } else if (current) {
           current.content += '\n' + line;
         }
       });
 
       if (current) messages.push(current);
-      if (!messages.length) return {
-        id: filename,
-        title: stripExt(filename),
-        subtitle: '未解析到有效消息',
-        messages: [],
-        firstTimeValue: 0
-      };
+      if (!messages.length) return { id: filename, title: stripExt(filename), subtitle: '未解析到有效消息', messages: [], firstTimeValue: 0 };
 
       const firstTimeStr = messages[0].timestamp || '';
       const firstVal = firstTimeStr ? parseTimeStringToSeconds(firstTimeStr) : 0;
       messages.forEach(m => { delete m._rawTime; });
 
-      return {
-        id: filename,
-        title: stripExt(filename),
-        subtitle: `${messages.length} 条消息`,
-        messages,
-        firstTimeValue: firstVal ?? 0
-      };
+      return { id: filename, title: stripExt(filename), subtitle: `${messages.length} 条消息`, messages, firstTimeValue: firstVal ?? 0 };
     }
 
     function stripExt(name) { return name.replace(/\.[^/.]+$/, ''); }
     function formatTimestampFromSeconds(sec) {
       const d = new Date(sec * 1000);
       const pad = n => String(n).padStart(2, '0');
-      const Y = d.getFullYear();
-      const M = pad(d.getMonth() + 1);
-      const D = pad(d.getDate());
-      const h = pad(d.getHours());
-      const m = pad(d.getMinutes());
-      const s = pad(d.getSeconds());
+      const Y = d.getFullYear(), M = pad(d.getMonth() + 1), D = pad(d.getDate()), h = pad(d.getHours()), m = pad(d.getMinutes()), s = pad(d.getSeconds());
       return `${Y}-${M}-${D} ${h}:${m}:${s}`;
     }
     function parseTimeStringToSeconds(str) {
@@ -1718,9 +1448,7 @@
       return Math.floor(d.getTime() / 1000);
     }
 
-    function sortConversationsByTime() {
-      state.conversations.sort((a, b) => (b.firstTimeValue || 0) - (a.firstTimeValue || 0));
-    }
+    function sortConversationsByTime() { state.conversations.sort((a, b) => (b.firstTimeValue || 0) - (a.firstTimeValue || 0)); }
 
     function renderConversationList() {
       conversationListEl.innerHTML = '';
@@ -1746,8 +1474,7 @@
 
         const firstMsg = conv.messages && conv.messages[0] ? conv.messages[0] : null;
         const firstTimeStr = firstMsg && firstMsg.timestamp ? firstMsg.timestamp : '';
-        let datePart = '';
-        if (firstTimeStr) datePart = firstTimeStr.split(' ')[0];
+        let datePart = firstTimeStr ? firstTimeStr.split(' ')[0] : '';
 
         item.innerHTML = `
           <div class="conversation-title">${escapeHtml(conv.title || '未命名对话')}</div>
@@ -1786,20 +1513,16 @@
       const content = document.createElement('div');
       content.className = 'image-modal-content';
       const img = document.createElement('img');
-      img.src = src;
-      img.alt = altText || '';
+      img.src = src; img.alt = altText || '';
       const closeBtn = document.createElement('button');
-      closeBtn.className = 'image-modal-close';
-      closeBtn.innerHTML = '×';
+      closeBtn.className = 'image-modal-close'; closeBtn.innerHTML = '×';
       const close = () => {
         overlay.classList.remove('show');
         setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 220);
       };
       closeBtn.addEventListener('click', close);
       overlay.addEventListener('click', ev => { if (ev.target === overlay) close(); });
-      content.appendChild(img);
-      content.appendChild(closeBtn);
-      overlay.appendChild(content);
+      content.appendChild(img); content.appendChild(closeBtn); overlay.appendChild(content);
       document.body.appendChild(overlay);
       setTimeout(() => overlay.classList.add('show'), 10);
     }
@@ -1822,10 +1545,7 @@
 
       const total = conv.messages.length;
       let visible = state.visibleCounts[conv.id];
-      if (!visible || visible <= 0) {
-        visible = Math.min(PAGE_SIZE, total);
-        state.visibleCounts[conv.id] = visible;
-      }
+      if (!visible || visible <= 0) { visible = Math.min(PAGE_SIZE, total); state.visibleCounts[conv.id] = visible; }
       const messagesToRender = conv.messages.slice(0, visible);
 
       const q = state.searchQuery.trim();
@@ -1838,13 +1558,8 @@
         const avatarEl = document.createElement('div');
         avatarEl.className = 'avatar ' + (msg.role === 'user' ? 'user' : 'assistant');
         const avatarUrl = msg.role === 'user' ? state.avatars.user : state.avatars.assistant;
-        if (avatarUrl) {
-          avatarEl.style.backgroundImage = `url(${avatarUrl})`;
-          avatarEl.textContent = '';
-        } else {
-          avatarEl.style.backgroundImage = 'none';
-          avatarEl.textContent = msg.role === 'user' ? '妹' : '哥';
-        }
+        if (avatarUrl) { avatarEl.style.backgroundImage = `url(${avatarUrl})`; avatarEl.textContent = ''; }
+        else { avatarEl.style.backgroundImage = 'none'; avatarEl.textContent = msg.role === 'user' ? '妹' : '哥'; }
 
         const wrapper = document.createElement('div');
         wrapper.className = 'bubble-wrapper';
@@ -1857,17 +1572,12 @@
           contentDiv.className = 'markdown-body';
           try { contentDiv.innerHTML = (window.marked ? marked.parse(msg.content || '') : (msg.content||'')); }
           catch { contentDiv.textContent = msg.content || ''; }
-          if (highlightRegex) {
-            contentDiv.innerHTML = contentDiv.innerHTML.replace(highlightRegex, m => `<mark>${m}</mark>`);
-          }
+          if (highlightRegex) contentDiv.innerHTML = contentDiv.innerHTML.replace(highlightRegex, m => `<mark>${m}</mark>`);
           bubble.appendChild(contentDiv);
         }
 
         if (Array.isArray(msg.images) && msg.images.length) {
-          const isImageOnlyReply =
-            msg.role === 'assistant' &&
-            (!msg.content || !msg.content.trim()) &&
-            msg.images.length > 0;
+          const isImageOnlyReply = msg.role === 'assistant' && (!msg.content || !msg.content.trim()) && msg.images.length > 0;
 
           const thumbContainer = document.createElement('div');
           thumbContainer.className = 'thumbnails-container';
@@ -1912,13 +1622,8 @@
         wrapper.appendChild(bubble);
         wrapper.appendChild(metaEl);
 
-        if (msg.role === 'user') {
-          row.appendChild(wrapper);
-          row.appendChild(avatarEl);
-        } else {
-          row.appendChild(avatarEl);
-          row.appendChild(wrapper);
-        }
+        if (msg.role === 'user') { row.appendChild(wrapper); row.appendChild(avatarEl); }
+        else { row.appendChild(avatarEl); row.appendChild(wrapper); }
 
         chatBodyEl.appendChild(row);
       });
