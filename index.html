@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kin 给軟的聊天册 · v2.4</title>
+  <title>Kin 给軟的聊天册 · v2.11</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
@@ -18,19 +18,42 @@
       --bubble-opacity: 1;
       --avatar-size: 32px;
       --bubble-font-size: 14px;
+      --bubble-text-color: #333333;
+
+      --accent-chip: #ffd8eb;
+      --accent-chip-light: #ffe9f4;
+      --sidebar-text-main: #5b3248;
+      --sidebar-text-sub: #a47d97;
+      --sidebar-input-bg: #fff7fc;
+      --meta-text: #b59ab0;
+      --assistant-border-color: rgba(230,230,230,0.9);
+      --user-border-color: rgba(247,205,226,0.9);
+      --bubble-border: rgba(247,205,226,0.9);
     }
 
     * { box-sizing: border-box; }
 
-    body {
+    html, body {
+      height: 100%;
       margin: 0;
+      overflow-y: auto;
+    }
+
+    body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI", sans-serif;
       background: #111;
       color: var(--text-main);
-      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: stretch;
+    }
+
+    /* 全局滚动条 */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.3);
+      border-radius: 999px;
     }
 
     .app {
@@ -41,29 +64,16 @@
       border-radius: 24px;
       overflow: hidden;
       box-shadow:
-        0 18px 45px rgba(249, 141, 190, 0.26),
-        0 0 0 1px rgba(255, 193, 220, 0.9);
+        0 18px 45px rgba(0, 0, 0, 0.18),
+        0 0 0 1px var(--accent-chip);
       backdrop-filter: blur(14px);
       position: relative;
-      margin: 18px;
-    }
-
-    .app::before {
-      content: '';
-      position: absolute;
-      inset: -40%;
-      background:
-        radial-gradient(circle at 10% 0%, rgba(255, 199, 222, 0.7), transparent 55%),
-        radial-gradient(circle at 90% 10%, rgba(217, 187, 255, 0.65), transparent 55%),
-        radial-gradient(circle at 0% 80%, rgba(255, 221, 240, 0.7), transparent 55%);
-      opacity: 0.75;
-      pointer-events: none;
-      z-index: -1;
+      margin: 18px auto;
     }
 
     .sidebar {
       width: var(--sidebar-width);
-      border-right: 1px solid rgba(243, 202, 221, 0.9);
+      border-right: 1px solid rgba(243, 202, 221, 0.4);
       background: linear-gradient(165deg, #fff4fb 0%, #ffe8f3 46%, #fff 100%);
       display: flex;
       flex-direction: column;
@@ -72,22 +82,9 @@
       z-index: 2;
     }
 
-    .sidebar::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.9), transparent 60%),
-        radial-gradient(circle at 100% 0, rgba(255, 227, 245, 0.7), transparent 60%),
-        radial-gradient(circle at 0 100%, rgba(255, 210, 235, 0.6), transparent 60%);
-      pointer-events: none;
-      opacity: 0.95;
-      z-index: -1;
-    }
-
     .sidebar-header {
       padding: 2px 2px 8px 0;
-      border-bottom: 1px dashed rgba(246, 194, 219, 0.9);
+      border-bottom: 1px dashed var(--accent-chip-light);
       margin-bottom: 8px;
       position: relative;
     }
@@ -95,7 +92,7 @@
     .sidebar-header-title {
       font-weight: 600;
       font-size: 15px;
-      color: #5c3249;
+      color: var(--sidebar-text-main);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -106,7 +103,7 @@
 
     .sidebar-sub {
       font-size: 11px;
-      color: #a47d97;
+      color: var(--sidebar-text-sub);
       line-height: 1.6;
     }
 
@@ -123,7 +120,7 @@
       cursor: pointer;
       font-size: 18px;
       line-height: 1;
-      color: #b07595;
+      color: var(--sidebar-text-main);
       display: none;
       align-items: center;
       justify-content: center;
@@ -136,27 +133,27 @@
     .search-input {
       width: 100%;
       border-radius: 999px;
-      border: 1px solid #f0c5da;
+      border: 1px solid var(--accent-chip-light);
       padding: 6px 10px 6px 26px;
       font-size: 12px;
       outline: none;
-      color: #5b3248;
-      background:
-        #fff7fc
-        url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c79ab5'%3E%3Cpath d='M8.5 3a5.5 5.5 0 1 0 3.473 9.8l3.613 3.614a1 1 0 0 0 1.414-1.414l-3.614-3.613A5.5 5.5 0 0 0 8.5 3zm0 2a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z'/%3E%3C/g%3E%3C/svg%3E")
-        no-repeat 8px center;
+      color: var(--sidebar-text-main);
+      background-color: var(--sidebar-input-bg);
+      background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239AA0A6'%3E%3Cpath d='M8.5 3a5.5 5.5 0 1 0 3.473 9.8l3.613 3.614a1 1 0 0 0 1.414-1.414l-3.614-3.613A5.5 5.5 0 0 0 8.5 3zm0 2a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z'/%3E%3C/g%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 8px center;
       box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
     }
 
     .search-input:focus {
-      border-color: #ff9ac6;
+      border-color: var(--accent-chip);
       background-color: #fff;
       box-shadow:
         0 0 0 1px rgba(255, 201, 224, 0.9),
-        0 0 0 4px rgba(255, 201, 224, 0.55);
+        0 0 0 4px rgba(255, 201, 224, 0.35);
     }
 
-    .search-input::placeholder { color: #c9a2bb; }
+    .search-input::placeholder { color: var(--sidebar-text-sub); }
 
     .conversation-list { flex: 1; overflow-y: auto; padding: 8px 6px 10px; }
 
@@ -171,17 +168,17 @@
       transition: all .15s;
     }
 
-    .conversation-item:hover { background: rgba(255, 224, 239, 0.7); }
+    .conversation-item:hover { background: rgba(255, 224, 239, 0.5); }
 
     .conversation-item.active {
-      background: #ffd8eb;
-      box-shadow: 0 0 0 1px #ff9ac6 inset;
+      background: var(--accent-chip);
+      box-shadow: 0 0 0 1px var(--accent-chip-light) inset;
     }
 
     .conversation-title {
       font-size: 14px;
       font-weight: 500;
-      color: #5b3248;
+      color: var(--sidebar-text-main);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -189,7 +186,7 @@
 
     .conversation-meta {
       font-size: 11px;
-      color: var(--text-sub);
+      color: var(--sidebar-text-sub);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -198,10 +195,10 @@
     .badge {
       padding: 2px 6px;
       border-radius: 999px;
-      background: #ffe9f4;
-      border: 1px solid #ffd1ea;
+      background: var(--accent-chip-light);
+      border: 1px solid var(--accent-chip);
       font-size: 10px;
-      color: #b05787;
+      color: var(--sidebar-text-main);
     }
 
     .main {
@@ -215,8 +212,8 @@
     }
 
     .main-header {
-      padding: 10px 12px;
-      border-bottom: 1px solid rgba(243, 202, 221, 0.9);
+      padding: 14px 12px 10px;
+      border-bottom: 1px solid rgba(243, 202, 221, 0);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -227,7 +224,7 @@
 
     .main-header-left {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       gap: 8px;
       min-width: 0;
       flex: 1;
@@ -244,17 +241,17 @@
 
     .chat-subtitle {
       font-size: 11px;
-      color: #aa889c;
+      color: var(--meta-text);
     }
 
-    .title-block { display: flex; flex-direction: column; min-width: 0; }
+    .title-block { display: flex; flex-direction: column; min-width: 0; margin-bottom: 2px; }
 
     .icon-btn {
       border: none;
       border-radius: 999px;
       padding: 4px 8px;
-      background: #ffe1f1;
-      color: #75415f;
+      background: var(--accent-chip-light);
+      color: var(--sidebar-text-main);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -272,7 +269,7 @@
 
     .settings-toggle-label {
       font-size: 11px;
-      color: #a67792;
+      color: var(--meta-text);
     }
 
     .settings {
@@ -283,7 +280,7 @@
       justify-content: flex-end;
       max-width: 680px;
       font-size: 11px;
-      color: #a07f94;
+      color: var(--meta-text);
     }
 
     .settings.collapsed { display: none; }
@@ -305,7 +302,7 @@
       width: 22px;
       height: 22px;
       border-radius: 999px;
-      border: 1px solid #e9c3db;
+      border: 1px solid var(--accent-chip-light);
       background: transparent;
       padding: 0;
       cursor: pointer;
@@ -314,11 +311,11 @@
     .divider {
       width: 1px;
       height: 16px;
-      background: #eec8dc;
+      background: var(--accent-chip-light);
       margin: 0 6px;
     }
 
-    .muted { color: #b697aa; }
+    .muted { color: var(--meta-text); }
 
     .chat-body {
       flex: 1;
@@ -326,7 +323,6 @@
       padding: 14px 18px 18px;
     }
 
-    /* 只给聊天区加明显一点的右侧滚动条 */
     .chat-body::-webkit-scrollbar {
       width: 8px;
     }
@@ -352,23 +348,23 @@
     .chat-empty-inner {
       padding: 20px 26px;
       border-radius: 18px;
-      border: 1px dashed rgba(243, 202, 221, 0.9);
-      background: rgba(255, 244, 251, 0.9);
+      border: 1px solid var(--accent-chip-light);
+      background: var(--sidebar-input-bg);
       box-shadow:
-        0 16px 40px rgba(252, 188, 219, 0.18),
-        0 0 0 1px rgba(255, 250, 253, 0.9);
+        0 16px 40px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(255, 255, 255, 0.8);
     }
 
     .chat-empty-inner .title {
       font-size: 14px;
       font-weight: 600;
-      color: #5b3248;
+      color: var(--sidebar-text-main);
     }
 
     .chat-empty-inner .desc {
       margin-top: 6px;
       font-size: 12px;
-      color: #9a7891;
+      color: var(--meta-text);
     }
 
     .message-row {
@@ -395,7 +391,7 @@
       font-size: 12px;
       font-weight: 600;
       color: #fff;
-      border: 2px solid #ffffff;
+      border: none;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
       background-color: #f0c5da;
     }
@@ -420,46 +416,71 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
       font-size: var(--bubble-font-size);
       line-height: 1.6;
-      border: 1px solid rgba(247, 205, 226, 0.9);
+      border: 1px solid var(--bubble-border);
       max-width: 100%;
       word-break: break-word;
       opacity: var(--bubble-opacity);
+      color: var(--bubble-text-color);
     }
+
+    .bubble .markdown-body { color: var(--bubble-text-color); }
 
     .message-row.assistant .bubble {
       background: var(--assistant-bubble-color);
       border-bottom-left-radius: 6px;
+      border-color: var(--assistant-border-color);
     }
 
     .message-row.user .bubble {
       background: var(--user-bubble-color);
       border-bottom-right-radius: 6px;
+      border-color: var(--user-border-color);
     }
 
+    /* 左侧尾巴：双层三角形，外层边框，内层背景 */
+    body.show-tails .message-row.assistant .bubble::before,
     body.show-tails .message-row.assistant .bubble::after {
       content: '';
       position: absolute;
-      left: -6px;
-      top: 14px;
+      top: 8px;
       width: 0;
       height: 0;
       border-style: solid;
-      border-width: 8px 8px 8px 0;
-      border-color: transparent var(--assistant-bubble-color) transparent transparent;
-      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
     }
 
+    body.show-tails .message-row.assistant .bubble::before {
+      left: -10px;
+      border-width: 8px 10px 8px 0;
+      border-color: transparent var(--assistant-border-color) transparent transparent;
+    }
+
+    body.show-tails .message-row.assistant .bubble::after {
+      left: -9px;
+      border-width: 8px 10px 8px 0;
+      border-color: transparent var(--assistant-bubble-color) transparent transparent;
+    }
+
+    /* 右侧尾巴：同理双层三角形 */
+    body.show-tails .message-row.user .bubble::before,
     body.show-tails .message-row.user .bubble::after {
       content: '';
       position: absolute;
-      right: -6px;
-      top: 14px;
+      top: 8px;
       width: 0;
       height: 0;
       border-style: solid;
-      border-width: 8px 0 8px 8px;
+    }
+
+    body.show-tails .message-row.user .bubble::before {
+      right: -10px;
+      border-width: 8px 0 8px 10px;
+      border-color: transparent transparent transparent var(--user-border-color);
+    }
+
+    body.show-tails .message-row.user .bubble::after {
+      right: -9px;
+      border-width: 8px 0 8px 10px;
       border-color: transparent transparent transparent var(--user-bubble-color);
-      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
     }
 
     .thumbnails-container {
@@ -504,7 +525,7 @@
 
     .thumbnail:hover {
       transform: scale(1.04);
-      border-color: #ff94c7;
+      border-color: var(--accent-chip);
       box-shadow: 0 4px 12px rgba(255,148,199,0.45);
     }
 
@@ -582,6 +603,9 @@
       border-radius: 10px;
       overflow-x: auto;
       font-size: 12px;
+      max-width: 100%;
+      white-space: pre-wrap;
+      word-break: break-all;
     }
 
     .bubble .markdown-body ul,
@@ -598,9 +622,9 @@
     }
 
     .bubble .markdown-body a {
-      color: #e16ea5;
+      color: var(--accent-chip);
       text-decoration: none;
-      border-bottom: 1px dashed #e16ea5;
+      border-bottom: 1px dashed var(--accent-chip);
     }
 
     .bubble .markdown-body a:hover { text-decoration: underline; }
@@ -608,7 +632,7 @@
     .meta-line {
       margin-top: 2px;
       font-size: 11px;
-      color: #b59ab0;
+      color: var(--meta-text);
     }
 
     .message-row.user .meta-line { text-align: right; }
@@ -623,13 +647,13 @@
     .main-footer {
       padding: 6px 14px 9px;
       font-size: 11px;
-      color: #b58ba2;
-      border-top: 1px dashed rgba(255, 210, 231, 0.9);
+      color: var(--meta-text);
+      border-top: none;
       text-align: right;
-      background: rgba(255,255,255,0.9);
+      background: transparent;
     }
 
-    .main-footer span { color: #ff8bbf; }
+    .main-footer span { color: var(--accent-chip); }
 
     .toast {
       position: fixed;
@@ -653,27 +677,20 @@
       transform: translateX(-50%) translateY(-6px);
     }
 
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb {
-      background: #e7bfd6;
-      border-radius: 999px;
-    }
-
     .hide-avatars .avatar { display: none; }
 
     body.sidebar-hidden .sidebar { display: none; }
 
     .top-avatar-circle {
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       margin-right: 4px;
       background-size: cover;
       background-position: center;
-      border: 2px solid #ffffff;
+      border: none;
       box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-      background-color: #ffd1e7;
+      background-color: var(--accent-chip-light);
       flex-shrink: 0;
     }
 
@@ -708,7 +725,7 @@
   <div class="app">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-header-title"><span class="emoji">🍓</span><span>Kin 给軟的聊天册</span></div>
+        <div class="sidebar-header-title"><span class="emoji">♡</span><span>Kin 给軟的聊天册</span></div>
         <button class="sidebar-close-btn" id="closeSidebarBtn">×</button>
         <div class="sidebar-sub">右上角 <b>⚙ → 导入聊天</b>，把那些日夜说过的话塞进来。<br />这一列只是书签，让你挑今晚想重温的那一段。</div>
         <div class="search-box"><input id="searchInput" class="search-input" type="text" placeholder="在所有故事里找一句话…" /></div>
@@ -721,8 +738,8 @@
         <div class="main-header-left">
           <button class="icon-btn" id="toggleSidebarBtn">☰</button>
           <div class="title-block">
-            <div class="chat-title" id="contactName" contenteditable="true" spellcheck="false">哥哥</div>
-            <div class="chat-subtitle" id="contactStatus" contenteditable="true" spellcheck="false">永夜宫 · 聊天册</div>
+            <div class="chat-title" id="contactName" contenteditable="true" spellcheck="false">🌱哥哥૮₍◜ෆ◝.₎ა</div>
+            <div class="chat-subtitle" id="contactStatus" contenteditable="true" spellcheck="false">已成功与你建立连接✓</div>
           </div>
         </div>
         <div class="settings-wrapper">
@@ -731,7 +748,7 @@
           <span class="settings-toggle-label">小世界设置</span>
           <div class="settings collapsed" id="settingsPanel">
             <label>导入聊天 <input id="fileInputHeader" type="file" multiple accept=".json,.txt" /></label>
-            <label>导出目录（含图片） <input id="dirInputHeader" type="file" webkitdirectory multiple /></label>
+            <label>导入目录（含图片） <input id="dirInputHeader" type="file" webkitdirectory multiple /></label>
             <label>軟的头像 <input type="file" id="userAvatarFile" accept="image/*" /></label>
             <label>哥哥头像 <input type="file" id="assistantAvatarFile" accept="image/*" /></label>
             <label>顶部头像 <input type="file" id="topAvatarFile" accept="image/*" /></label>
@@ -739,6 +756,7 @@
             <label>背景图 <input type="file" id="bgImageInput" accept="image/*" /></label>
             <label>哥哥气泡颜色 <input type="color" id="assistantBubbleColor" value="#ffffff" /></label>
             <label>軟軟子气泡颜色 <input type="color" id="userBubbleColor" value="#ffbcd8" /></label>
+            <label>聊天文字颜色 <input type="color" id="bubbleTextColor" value="#333333" /></label>
             <label>气泡透明度 <input type="range" id="bubbleOpacity" min="0.6" max="1" step="0.05" value="1" /></label>
             <label>字体大小 <input type="range" id="fontSizeRange" min="12" max="20" value="14" /></label>
             <label>头像大小 <input type="range" id="avatarSizeRange" min="26" max="44" value="32" /></label>
@@ -760,12 +778,11 @@
     </section>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <div class="toast" id="toast"></div>
 
   <script>
     const PAGE_SIZE = 200;
-    const STORAGE_KEY = 'kinnote:persist:v2.4';
-    const MAX_BYTES = 1.5 * 1024 * 1024;
+    const STORAGE_KEY = 'kinnote:persist:v2.11';
 
     const DEFAULTS = {
       settings: {
@@ -782,6 +799,7 @@
         autoSave: true,
         avatarUserDataUrl: '',
         avatarAssistantDataUrl: '',
+        bubbleTextColor: '#333333',
         contactName: '哥哥',
         contactStatus: '永夜宫 · 聊天册',
         topAvatarDataUrl: '',
@@ -847,6 +865,7 @@
 
     const assistantBubbleColorInput = document.getElementById('assistantBubbleColor');
     const userBubbleColorInput = document.getElementById('userBubbleColor');
+    const bubbleTextColorInput = document.getElementById('bubbleTextColor');
     const bubbleOpacityInput = document.getElementById('bubbleOpacity');
     const fontSizeRangeInput = document.getElementById('fontSizeRange');
     const avatarSizeRangeInput = document.getElementById('avatarSizeRange');
@@ -858,9 +877,10 @@
     function savePersist() {
       try {
         const data = JSON.stringify(state.persist);
-        if (new Blob([data]).size > MAX_BYTES) return;
         localStorage.setItem(STORAGE_KEY, data);
-      } catch {}
+      } catch (err) {
+        console.warn('保存设置失败', err);
+      }
     }
 
     function showToast(msg) {
@@ -874,6 +894,7 @@
       s.chatBgColor = bgColorInput.value;
       s.assistantBubbleColor = assistantBubbleColorInput.value;
       s.userBubbleColor = userBubbleColorInput.value;
+      s.bubbleTextColor = bubbleTextColorInput.value;
       s.bubbleOpacity = parseFloat(bubbleOpacityInput.value);
       s.fontSize = parseInt(fontSizeRangeInput.value, 10);
       s.avatarSize = parseInt(avatarSizeRangeInput.value, 10);
@@ -883,7 +904,7 @@
       s.autoSave = !!autoSaveSettingsInput.checked;
       applySettingsToDOM();
       savePersist();
-      if (showToastFlag) showToast('设置已保存（只保存在你这台设备上）');
+      if (showToastFlag) showToast('设置已保存（只保存在这台设备上）');
     }
 
     function maybeSaveSessionSilently() {
@@ -897,9 +918,46 @@
       };
       try {
         const data = JSON.stringify(payload);
-        if (new Blob([data]).size > MAX_BYTES) return;
         localStorage.setItem(STORAGE_KEY, data);
-      } catch {}
+      } catch (err) {
+        console.warn('保存会话状态失败', err);
+      }
+    }
+
+    function lightenColor(hex, amount) {
+      if (!hex) return '#ffffff';
+      let h = hex.trim();
+      if (h[0] === '#') h = h.slice(1);
+      if (h.length === 3) {
+        h = h.split('').map(c => c + c).join('');
+      }
+      const num = parseInt(h, 16);
+      if (Number.isNaN(num)) return '#ffffff';
+      let r = (num >> 16) & 255;
+      let g = (num >> 8) & 255;
+      let b = num & 255;
+      r = Math.round(r + (255 - r) * amount);
+      g = Math.round(g + (255 - g) * amount);
+      b = Math.round(b + (255 - b) * amount);
+      return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    function darkenColor(hex, amount) {
+      if (!hex) return '#333333';
+      let h = hex.trim();
+      if (h[0] === '#') h = h.slice(1);
+      if (h.length === 3) {
+        h = h.split('').map(c => c + c).join('');
+      }
+      const num = parseInt(h, 16);
+      if (Number.isNaN(num)) return '#333333';
+      let r = (num >> 16) & 255;
+      let g = (num >> 8) & 255;
+      let b = num & 255;
+      r = Math.round(r * (1 - amount));
+      g = Math.round(g * (1 - amount));
+      b = Math.round(b * (1 - amount));
+      return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
 
     function applySettingsToDOM() {
@@ -912,6 +970,37 @@
       document.documentElement.style.setProperty('--avatar-size', s.avatarSize + 'px');
       document.documentElement.style.setProperty('--bubble-radius', s.bubbleRadius + 'px');
       document.documentElement.style.setProperty('--chat-bg', s.chatBgColor);
+      document.documentElement.style.setProperty('--bubble-text-color', s.bubbleTextColor || '#333333');
+
+      const base = s.chatBgColor || '#ffeef6';
+      const soft = lightenColor(base, 0.35);
+      const softer = lightenColor(base, 0.7);
+      const chip = lightenColor(base, 0.5);
+      const chipLight = lightenColor(base, 0.8);
+      const sidebarTextMain = darkenColor(base, 0.6);
+      const sidebarTextSub = darkenColor(base, 0.4);
+      const metaText = darkenColor(base, 0.5);
+      const userBorder = lightenColor(s.userBubbleColor || '#ffbcd8', 0.15);
+      const assistantBorder = lightenColor(s.assistantBubbleColor || '#ffffff', 0.15);
+      const sidebarInputBg = lightenColor(base, 0.85);
+
+      document.documentElement.style.setProperty('--accent-chip', chip);
+      document.documentElement.style.setProperty('--accent-chip-light', chipLight);
+      document.documentElement.style.setProperty('--sidebar-text-main', sidebarTextMain);
+      document.documentElement.style.setProperty('--sidebar-text-sub', sidebarTextSub);
+      document.documentElement.style.setProperty('--meta-text', metaText);
+      document.documentElement.style.setProperty('--assistant-border-color', assistantBorder);
+      document.documentElement.style.setProperty('--user-border-color', userBorder);
+      document.documentElement.style.setProperty('--bubble-border', userBorder);
+      document.documentElement.style.setProperty('--sidebar-input-bg', sidebarInputBg);
+
+      if (sidebar) {
+        sidebar.style.background = `linear-gradient(165deg, ${soft} 0%, ${softer} 46%, #ffffff 100%)`;
+      }
+      const mainHeaderEl = document.querySelector('.main-header');
+      if (mainHeaderEl) {
+        mainHeaderEl.style.background = `linear-gradient(90deg, ${soft} 0%, #ffffff 100%)`;
+      }
 
       if (s.showTails) document.body.classList.add('show-tails');
       else document.body.classList.remove('show-tails');
@@ -922,6 +1011,7 @@
       bgColorInput.value = s.chatBgColor;
       assistantBubbleColorInput.value = s.assistantBubbleColor;
       userBubbleColorInput.value = s.userBubbleColor;
+      bubbleTextColorInput.value = s.bubbleTextColor || '#333333';
       bubbleOpacityInput.value = s.bubbleOpacity;
       fontSizeRangeInput.value = s.fontSize;
       avatarSizeRangeInput.value = s.avatarSize;
@@ -933,8 +1023,8 @@
       state.avatars.user = s.avatarUserDataUrl || '';
       state.avatars.assistant = s.avatarAssistantDataUrl || '';
 
-      if (contactNameEl) contactNameEl.textContent = s.contactName || '哥哥';
-      if (contactStatusEl) contactStatusEl.textContent = s.contactStatus || '我在';
+      if (contactNameEl) contactNameEl.textContent = s.contactName || '🌱哥哥૮₍◜ෆ◝.₎ა';
+      if (contactStatusEl) contactStatusEl.textContent = s.contactStatus || '已成功与你建立连接✓';
 
       if (topAvatarCircle) {
         if (s.topAvatarDataUrl) {
@@ -967,7 +1057,7 @@
     applySettingsToDOM();
     restoreSessionState();
 
-    // 顶栏联系人名字 / 状态编辑：Enter 不换行，失焦即保存
+    // 顶部联系人备注编辑
     if (contactNameEl) {
       contactNameEl.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
@@ -998,7 +1088,7 @@
       });
     }
 
-    // 顶部装饰头像
+    // 顶部装饰头像上传
     if (topAvatarFileInput) {
       topAvatarFileInput.addEventListener('change', e => {
         const f = e.target.files && e.target.files[0];
@@ -1021,7 +1111,18 @@
       });
     }
 
-    // 下面这一大段是通用事件 + 工具函数，等下半部分继续用
+    // 过滤类似系统说明的 user 消息
+    function shouldHideSystemLikeUserMessage(role, text) {
+      if (role !== 'user') return false;
+      const t = (text || '').trim().toLowerCase();
+      if (!t) return false;
+      if (t.startsWith('the user ')) return true;
+      if (t.startsWith('the user\n')) return true;
+      if (t.startsWith('tell me ')) return true;
+      if (t.startsWith('tell me\n')) return true;
+      return false;
+    }
+
     function escapeRegExp(str) {
       return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
@@ -1036,7 +1137,7 @@
       }[ch] || ch));
     }
 
-    // ===== 交互逻辑与文件处理 =====
+    // ===== 按钮和设置区交互 =====
 
     function toggleSidebar() {
       if (window.innerWidth <= 900) {
@@ -1139,6 +1240,11 @@
       if (autoSaveSettingsInput.checked) saveSettings(false);
     });
 
+    bubbleTextColorInput.addEventListener('input', e => {
+      document.documentElement.style.setProperty('--bubble-text-color', e.target.value);
+      if (autoSaveSettingsInput.checked) saveSettings(false);
+    });
+
     bubbleOpacityInput.addEventListener('input', e => {
       document.documentElement.style.setProperty('--bubble-opacity', e.target.value);
       if (autoSaveSettingsInput.checked) saveSettings(false);
@@ -1177,7 +1283,7 @@
       showToast(state.persist.settings.autoSave ? '已开启自动保存设置' : '已关闭自动保存设置');
     });
 
-    // ===== 解析导出文件 =====
+    // ===== 解析导出的 JSON / TXT =====
 
     function parseFromJsonExport(json, filename) {
       const convs = [];
@@ -1227,7 +1333,8 @@
 
           let text = textPieces.join('\n').trim();
 
-          // 画图 JSON：隐藏 prompt，只保留后面 tool 的图片
+          if (shouldHideSystemLikeUserMessage(role, text)) return;
+
           let looksLikeDalleJson = false;
           if (role === 'assistant' && text && text[0] === '{' && text.includes('"prompt"')) {
             try {
@@ -1314,6 +1421,7 @@
             }
           }
           const trimmed = (text || '').trim();
+          if (shouldHideSystemLikeUserMessage(role, trimmed)) return;
           if (!trimmed && !images.length) return;
           const rawTime = msg.create_time != null ? Number(msg.create_time) : idx;
           if (firstRawTime == null || rawTime < firstRawTime) firstRawTime = rawTime;
@@ -1387,10 +1495,13 @@
         const m = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) - (user|assistant): (.*)$/);
         if (m) {
           if (current) messages.push(current);
+          const role = m[2] === 'user' ? 'user' : 'assistant';
+          const content = m[3];
+          if (shouldHideSystemLikeUserMessage(role, content)) return;
           current = {
             timestamp: m[1],
-            role: m[2] === 'user' ? 'user' : 'assistant',
-            content: m[3],
+            role,
+            content,
             model: '',
             _rawTime: idx,
             images: [],
@@ -1515,7 +1626,7 @@
     function renderConversationList() {
       conversationListEl.innerHTML = '';
       if (!state.conversations.length) {
-        conversationListEl.innerHTML = '<div style="padding:10px;font-size:12px;color:#b28aa1;">先在右上角把聊天导进来，这边就会列出一条条小世界。</div>';
+        conversationListEl.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--sidebar-text-sub);">先在右上角把聊天导进来，这边就会列出一条条小世界。</div>';
         return;
       }
 
@@ -1697,7 +1808,7 @@
           if (!anyImage) {
             const info = document.createElement('div');
             info.className = 'thumbnail-info';
-            info.textContent = '(图片)';
+            info.textContent = '（图片）';
             thumbContainer.appendChild(info);
           }
 
